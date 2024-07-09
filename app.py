@@ -13,7 +13,7 @@ from viktor.parametrization import (
     GeoPolygonField,
     BooleanField,
     LineBreak,
-    MultiSelectField, FileField, ActionButton
+    MultiSelectField, FileField, ActionButton, SetParamsButton
 )
 from pathlib import Path
 from viktor import ViktorController
@@ -26,6 +26,7 @@ from viktor.views import (
 )
 
 from viktor.errors import UserError
+from viktor.result import SetParamsResult
 
 import plotly.graph_objects as go
 import db_helpers as db
@@ -55,6 +56,13 @@ def list_connected_loads(params, **kwargs):
     else:
         return []
 
+def create_default_content():
+    load_profile = ph.LoadProfile.find_load_profile('Industrial')
+    default_content = load_profile.profile_dict()
+    default_array = default_content['time_array']
+    return default_array
+
+
 class Parametrization(ViktorParametrization):
     step_1 = Step("Manage Substations/Transformers", views=["get_map_view_1"])
     step_1.section_1 = Section("Add Substations/Transformers")
@@ -69,7 +77,7 @@ class Parametrization(ViktorParametrization):
     step_1.section_2.substation_name = OptionField('Name', options=list_substations(), flex=50)
     step_1.section_2.remove_button = ActionButton('Remove from Database', flex=50, method='remove_substation')
 
-    step_2 = Step("Manage Load Profiles", description="Manage load profiles for different customer groups", views=["get_plotly_view_1"])
+    step_2 = Step("Manage Load Profiles", description="Manage load profiles for different customer groups", views=['plotly_new_load_profile', "get_plotly_view_1"])
 
     step_2.section_1 = Section("Create Customer Group", description="Customize the specified load profiles. ")
     step_2.section_1.intro = Text("""Create load profiles for different customer types. Specify the name, peak load, and base profile. The base profile is a predefined profile that can be scaled to the peak load.""")
@@ -82,9 +90,11 @@ class Parametrization(ViktorParametrization):
     
     step_2.section_2 = Section("Add Base Profiles")
     step_2.section_2.introtext = Text("A base profile can be set by uploading a CSV file with the load profile data. The CSV file should contain two columns: time and load. Give a name to the profile and upload the file.")
-    step_2.section_2.profile_name = TextField("Name", flex=50)
-    step_2.section_2.upload_file = FileField("Upload CSV File", flex=50)
-    step_2.section_2.upload_button = ActionButton("Upload", flex=100, method='upload_base_profile')
+    step_2.section_2.profile_name = TextField("##### Name", flex=80)
+    step_2.section_2.table = Table("Create a New Load Profile", default=create_default_content())
+    step_2.section_2.table.time = TextField('time')
+    step_2.section_2.table.value = NumberField('value')
+    step_2.section_2.upload_button = ActionButton("Save Profile", flex=60, method='save_base_profile')
 
     step_2.section_3 = Section("View Base Load Profile")
     step_2.section_3.select_load_profile = OptionField("Select Load Profile", options=list_base_profiles(), default='Household', flex=50)
@@ -96,9 +106,7 @@ class Parametrization(ViktorParametrization):
     step_3.section_1.dynamic_array_1 = DynamicArray("### Connections \n Add new loads to the selected substation")
     step_3.section_1.dynamic_array_1.customer_type = OptionField("Customer Group", options=list_customer_profiles(), flex=50)
     step_3.section_1.dynamic_array_1.num_connections = IntegerField("Number of Customers", description="Define how many customers of this type are connected.", flex=50)
-    # step_3.section_1.dynamic_array_1.peak_load = NumberField("Peak Load", description="Define the peak load of the connection")
-    # step_3.section_1.dynamic_array_1.number_field_1 = NumberField("Variance (%)", description="Define the variance in the load profile.", flex=50)
-    step_3.section_1.connect_button = ActionButton('Connect', flex=100, method='connect_load')
+    step_3.section_1.connect_button = SetParamsButton('Connect', flex=100, method='connect_load')
 
     step_3.section_2 = Section("Remove Load")
     step_3.section_2.intro = Text('This section allows you to remove previously assigned load from the substation/transformer. Select the loads that need to be removed, and press the button.')
@@ -108,9 +116,10 @@ class Parametrization(ViktorParametrization):
 
     step_4 = Step("Load Growth Factor", description="Create scenarios based on the growrates", views=["get_plotly_view_1"])
     step_4.section_1 = Section("Load Growth Factor", description="Specify the Load Growth Factor per customer group for the substation")
+    step_4.section_1.select_substation = OptionField("Substation", options=list_substations(), flex=50)
     step_4.section_1.dynamic_array_1 = DynamicArray("Growrate")
-    step_4.section_1.dynamic_array_1.customer_type = OptionField("Customer Group", flex=33, description="Select the previously define customer group from the database to apply a load growth factor to.", options=['Household 1', 'Business 1', 'EV - public'])
-    step_4.section_1.dynamic_array_1.grow = NumberField("Load Growth Factor", flex=33, description="Growrate of the number of customers")
+    step_4.section_1.dynamic_array_1.customer_type = OptionField("Customer Group", flex=50, description="Select the previously define customer group from the database to apply a load growth factor to.", options=list_customer_profiles())
+    step_4.section_1.dynamic_array_1.grow = NumberField("Load Growth Factor", flex=50, description="Growrate of the number of customers")
     #step_4.section_1.dynamic_array_1.grow_type = OptionField("Type", flex=33, description="Growth type - percentage (baseline 100%) or absolute (number of connections)", options=['%', 'Absolute'], default='%')
     
 
@@ -149,6 +158,17 @@ class Controller(ViktorController):
             
             # print(load.scaled_profile)
             substation.add_load(load, num_connections)
+            
+        result = SetParamsResult({
+            "step_3": {
+                "section_1": {
+                    "dynamic_array_1": None
+                }
+            }
+        })
+        print(result)
+        return result
+        
 
     def remove_load(self, params, **kwargs):
         substation_name = params['step_3']['section_2']['substation_name']
@@ -156,10 +176,15 @@ class Controller(ViktorController):
         substation = db.Substation.get_substation_by_name(substation_name)
         substation.remove_load(load_name)
         
-    def upload_base_profile(self, params, **kwargs):
+    def save_base_profile(self, params, **kwargs):
         profile_name = params['step_2']['section_2']['profile_name']
-        file_path = params['step_2']['section_2']['upload_file']
-        ph.BaseProfile(profile_name).upload_profile(file_path)
+
+        profile = params['step_2']['section_2']['table']
+        time_array = []
+        for entry in profile:
+            time_array.append({'time': entry['time'], 'value': entry['value']})
+
+        ph.BaseProfile.save_base_profile(time_array, profile_name)
 
     @staticmethod
     def list_connected_loads(params, **kwargs):
@@ -181,7 +206,7 @@ class Controller(ViktorController):
         values = [entry['value'] for entry in profile['time_array']]
 
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=time, y=values, mode='lines', name='Load'))
+        fig.add_trace(go.Bar(x=time, y=values, name='Load'))
         
         fig.update_layout(
             title= profile['name'] + ' - Load Profile',
@@ -194,7 +219,41 @@ class Controller(ViktorController):
             range=[0, len(time)-1]
             ),
             yaxis=dict(
-                range=[0, 1]
+            range=[0, 1]
+            )
+        )
+
+        fig = fig.to_json()
+        
+        return PlotlyResult(fig)
+
+    @PlotlyView('Edited Load Profile', duration_guess=1)
+    def plotly_new_load_profile(self, params, **kwargs):
+        profile_name = params['step_2']['section_3']['select_load_profile']
+
+        if profile_name == None:
+            profile_name = 'Industrial'
+        
+        profile  = params['step_2']['section_2']['table']
+
+        time = [entry['time'] for entry in profile]
+        values = [entry['value'] for entry in profile]
+
+        fig = go.Figure()
+        fig.add_trace(go.Bar(x=time, y=values, name='Load'))
+        
+        fig.update_layout(
+            title= profile_name + ' - Load Profile',
+            xaxis_title='Hour of the Day',
+            yaxis_title='Normalized Load',
+            xaxis=dict(
+            tickmode='array',
+            tickvals=[time[i] for i in range(0, len(time), 12)],  # Every three hours (12 * 15 minutes = 3 hours)
+            ticktext=[time[i] for i in range(0, len(time), 12)],
+            range=[0, len(time)-1]
+            ),
+            yaxis=dict(
+            range=[0, 1]
             )
         )
 
@@ -224,22 +283,31 @@ class Controller(ViktorController):
         if substation is None:
             raise UserError(f"Substation {substation_name} not found")
 
-        aggregated_load = substation.get_total_load()
-        time = list(aggregated_load.keys())
-        values = list(aggregated_load.values())
+        detailed_profiles = substation.get_detailed_load_profiles()
+        time = sorted(detailed_profiles.keys())
 
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=time, y=values, mode='lines', name='Load'))
+
+        # Collecting all load names
+        load_names = set()
+        for loads_at_time in detailed_profiles.values():
+            load_names.update(loads_at_time.keys())
         
+        # Create a trace for each load
+        for load_name in load_names:
+            values = [detailed_profiles[t].get(load_name, 0) for t in time]
+            fig.add_trace(go.Bar(x=time, y=values, name=load_name))
+
         fig.update_layout(
-            title= ' Aggregated Load Profile',
+            title='Aggregated Load Profile',
             xaxis_title='Hour of the Day',
             yaxis_title='Normalized Load',
+            barmode='stack',
             xaxis=dict(
-            tickmode='array',
-            tickvals=[time[i] for i in range(0, len(time), 12)],  # Every three hours (12 * 15 minutes = 3 hours)
-            ticktext=[time[i] for i in range(0, len(time), 12)],
-            range=[0, len(time)-1]
+                tickmode='array',
+                tickvals=[time[i] for i in range(0, len(time), 12)],  # Every three hours (12 * 15 minutes = 3 hours)
+                ticktext=[time[i] for i in range(0, len(time), 12)],
+                range=[0, len(time)-1]
             )
         )
 

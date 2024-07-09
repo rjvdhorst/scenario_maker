@@ -85,6 +85,20 @@ class Substation:
         total_load_profile['name'] = self.name
         
         return total_load_profile
+    
+    def get_detailed_load_profiles(self):
+        """Returns detailed load profiles for each load."""
+        detailed_profiles = {}
+
+        for load in self.loads:
+            load_profile = load['profile']['time_array']
+            for timestep in load_profile:
+                time = timestep['time']
+                if time not in detailed_profiles:
+                    detailed_profiles[time] = {}
+                detailed_profiles[time][load['name']] = timestep['value'] * load['num_connections']
+
+        return detailed_profiles
 
     def to_geojson(self):
         return {

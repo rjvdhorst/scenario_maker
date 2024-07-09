@@ -14,7 +14,7 @@ class LoadProfile:
  
     def profile_dict(self):
         base_profiles_folder = Path(__file__).parent / 'base_profiles'
-        filename = self.base_profile +'.json'
+        filename = self.base_profile + '.json'
         json_file = base_profiles_folder / filename
         with open(json_file, 'r') as f:
             data = json.load(f)
@@ -41,7 +41,6 @@ class LoadProfile:
         data['profiles'].append(profile)
         db.save_database(data)
 
-
     @staticmethod
     def all_customer_profiles():
         data = db.open_database()
@@ -50,17 +49,9 @@ class LoadProfile:
     
     @staticmethod
     def list_names():
-        """
-        Returns a list of names of JSON files in the 'base_profiles' folder.
-
-        Returns:
-            list: A list of strings representing the names of JSON files.
-        """
-        # base_profiles_folder = Path(__file__).parent / 'base_profiles'
-        # json_files = base_profiles_folder.glob('*.json')
-        # json_file_names = [file.name for file in json_files]
-
-        json_file_names = ['Household', 'Commercial', 'Industrial', 'EV']
+        base_profiles_folder = Path(__file__).parent / 'base_profiles'
+        json_files = base_profiles_folder.glob('*.json')
+        json_file_names = [file.stem for file in json_files]
         return json_file_names
 
     @staticmethod
@@ -90,22 +81,15 @@ class BaseProfile:
         return data
     
     @staticmethod
-    def upload_base_profile(filepath, name):
-        # Read the CSV file
-        with open(filepath, 'r') as csv_file:
-            csv_data = csv.reader(csv_file)
-            # Convert the CSV data to a dictionary
-            profile_data = {'time_array': []}
-            for row in csv_data:
-                time = row[0]
-                value = row[1]
-                profile_data['time_array'].append({'time': time, 'value': value})
-        
-        # Save the profile data as a JSON file
+    def save_base_profile(time_array, profile_name):
         base_profiles_folder = Path(__file__).parent / 'base_profiles'
-        json_file = base_profiles_folder / (name + '.json')
-        with open(json_file, 'w') as json_file:
-            json.dump(profile_data, json_file)
-        
-        print(f"Base profile '{name}' uploaded successfully.")
+        file_name = profile_name + '.json'
+        json_file = base_profiles_folder / file_name
 
+        json_payload = {
+            'name': profile_name,
+            'time_array': time_array
+        }
+
+        with open(json_file, 'w') as f:
+            json.dump(json_payload, f)
