@@ -18,11 +18,11 @@ def save_database(data):
 
 
 class Substation:
-    def __init__(self, name, location, power_rating, num_feeders):
+    def __init__(self, name, location):
         self.name = name
         self.location = {'lon': location[0], 'lat': location[1]}  # Swap the order of coordinates
-        self.power_rating = power_rating
-        self.num_feeders = num_feeders
+        #self.power_rating = power_rating
+        #self.num_feeders = num_feeders
         self.loads = []
 
     def save_substation(self):
@@ -90,12 +90,12 @@ class Substation:
             'type': 'Feature',
             'geometry': {
                 'type': 'Point',
-                'coordinates': [self.location['lon'], self.location['lat']]
+                'coordinates': [self.location['lat'], self.location['lon']]
             },
             'properties': {
                 'name': self.name,
-                'power_rating': self.power_rating,
-                'num_feeders': self.num_feeders,
+                #'power_rating': self.power_rating,
+                #'num_feeders': self.num_feeders,
                 'loads': self.loads
             }
         }
@@ -108,11 +108,11 @@ class Substation:
         for substation in substations:
             if substation['properties']['name'] == name:
                 location = [substation['geometry']['coordinates'][1], substation['geometry']['coordinates'][0]]
-                power_rating = substation['properties']['power_rating']
-                num_feeders = substation['properties']['num_feeders']
+                #power_rating = substation['properties']['power_rating']
+                #num_feeders = substation['properties']['num_feeders']
                 loads = substation['properties']['loads']
 
-                substation_obj = cls(name, location, power_rating, num_feeders)
+                substation_obj = cls(name, location)
                 substation_obj.loads = loads
                 return substation_obj
 

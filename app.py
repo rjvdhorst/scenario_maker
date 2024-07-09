@@ -55,60 +55,59 @@ def list_connected_loads(params, **kwargs):
     else:
         return []
 
-
 class Parametrization(ViktorParametrization):
-    step_1 = Step("Select Substations", description="Edit substations", views=["get_map_view_1"])
-    step_1.section_1 = Section("Add Substations", description="Add a new substations")
-    step_1.section_1.intro = Text('### Substations \n Add a new substation to the database. Specify the name, power rating, number of feeders and location of the substation.')
-    step_1.section_1.substation_name = TextField('#### Name', flex=33)
-    step_1.section_1.substation_power = IntegerField('#### Powerrating', flex=33)
-    step_1.section_1.number_of_feeders = IntegerField('#### Number of feeders', flex=33)
+    step_1 = Step("Manage Substations/Transformers", views=["get_map_view_1"])
+    step_1.section_1 = Section("Add Substations/Transformers")
+    step_1.section_1.intro = Text('Add a new substation to the database. Specify the name and location of the substation or transformer.')
+    step_1.section_1.substation_name = TextField('#### Name', flex = 100)
+    # step_1.section_1.substation_power = IntegerField('#### Powerrating', flex=33)
+    # step_1.section_1.number_of_feeders = IntegerField('#### Number of feeders', flex=33)
     step_1.section_1.substation_location = GeoPointField('#### Location')
-    step_1.section_1.add_button = ActionButton('Add Substation to Database', flex=100, method='add_substation')
+    step_1.section_1.add_button = ActionButton('Add to Database', flex=100, method='add_substation')
 
-    step_1.section_2 = Section("Remove Substations", description="Remove")
+    step_1.section_2 = Section("Remove Substations/Transformers", description="Remove")
     step_1.section_2.substation_name = OptionField('Name', options=list_substations(), flex=50)
-    step_1.section_2.remove_button = ActionButton('Remove Substation from Database', flex=50, method='remove_substation')
+    step_1.section_2.remove_button = ActionButton('Remove from Database', flex=50, method='remove_substation')
 
-    step_2 = Step("Load Profile", description="Create load profiles for all different customer groups", views=["get_plotly_view_1"])
+    step_2 = Step("Manage Load Profiles", description="Manage load profiles for different customer groups", views=["get_plotly_view_1"])
 
-    step_2.section_1 = Section("Edit load profiles", description="Customize the specified load profiles. ")
-    step_2.section_1.intro = Text("""## Load Profiles \n Create load profiles for different customer types. Specify the name, peak load and base profile. The base profile is a predefined profile that can be scaled to the peak load.""")
+    step_2.section_1 = Section("Create Customer Group", description="Customize the specified load profiles. ")
+    step_2.section_1.intro = Text("""Create load profiles for different customer types. Specify the name, peak load, and base profile. The base profile is a predefined profile that can be scaled to the peak load.""")
 
-    step_2.section_1.dynamic_array_1 = DynamicArray("### Create Customer Type")
+    step_2.section_1.dynamic_array_1 = DynamicArray("")
     step_2.section_1.dynamic_array_1.profile_name = TextField("Name", flex=33)
     step_2.section_1.dynamic_array_1.peak_load = NumberField("Peak Load", suffix='KW', flex=33)
-    step_2.section_1.dynamic_array_1.base_profile = OptionField("Base profiles", options=list_base_profiles(), flex=33)
+    step_2.section_1.dynamic_array_1.base_profile = OptionField("Base Profile", options=list_base_profiles(), flex=33)
     step_2.section_1.normalize_button = ActionButton('Add to database', flex=100, method='add_load_profile')
     
-    step_2.section_2 = Section("Show load profile")
-    step_2.section_2.introtext = Text("## Normalized Base Profiles \n Select a base profile to see the normalized load profile. This profile will be multilpied by the peak load to get the final load profile.")
+    step_2.section_2 = Section("Investigate Base Profiles")
+    step_2.section_2.introtext = Text("Select a base profile to see the normalized load profile. This profile will be multilpied by the peak load to get the final load profile.")
     step_2.section_2.select_load_profile = OptionField('Select Profile', options=list_base_profiles(), default='Household', flex=100)
     
-    step_3 = Step("Current Energy Landscape", description="Specify the current energy landscape", views=['get_map_view_1'])
-    step_3.section_1 = Section("Add demand", description="Specify the demand side for the substation")
-    step_3.section_1.text_1 = Text("""### Demand \n To define what different scenario's can look like, it is possible to specify the number of customers of different types. This includes EV charging places""")
+    step_3 = Step("Develop Energy Landscape", views=['get_map_view_1'])
+    step_3.section_1 = Section("Assign Load Profile to Substation/Transformer")
+    step_3.section_1.text_1 = Text("""By assigning a customer group and the amount of customers in that group to a substation or transformer, an aggregated load profile for the specific transformer is developed.""")
     step_3.section_1.dynamic_array_1 = DynamicArray("Connections")
     step_3.section_1.dynamic_array_1.substation_name = OptionField("Substation", options=list_substations(), flex=50)
-    step_3.section_1.dynamic_array_1.customer_type = OptionField("Customer Type", options=list_customer_profiles(), flex=50)
-    step_3.section_1.dynamic_array_1.num_connections = IntegerField("Number of connections", description="Define how many customers of this type are connected.", flex=50)
+    step_3.section_1.dynamic_array_1.customer_type = OptionField("Customer Group", options=list_customer_profiles(), flex=50)
+    step_3.section_1.dynamic_array_1.num_connections = IntegerField("Number of Customers", description="Define how many customers of this type are connected.", flex=50)
     # step_3.section_1.dynamic_array_1.peak_load = NumberField("Peak Load", description="Define the peak load of the connection")
     step_3.section_1.dynamic_array_1.number_field_1 = NumberField("Variance (%)", description="Define the variance in the load profile.", flex=50)
-    step_3.section_1.connect_button = ActionButton('Connect ', flex=100, method='connect_load')
+    step_3.section_1.connect_button = ActionButton('Connect', flex=100, method='connect_load')
 
-    step_3.section_2 = Section("Remove demand", description="Remove previously defined demand from the substation")
-    step_3.section_2.intro = Text('### Remove demand \n This section allows you to remove previously defined demand from the substation. Select the loads that need to be removed, and press the button.')
-    step_3.section_2.substation_name = OptionField('Substation', options=list_substations(), flex=50)
+    step_3.section_2 = Section("Remove Load")
+    step_3.section_2.intro = Text('This section allows you to remove previously assigned load from the substation/transformer. Select the loads that need to be removed, and press the button.')
+    step_3.section_2.substation_name = OptionField('Substation/Transformer', options=list_substations(), flex=50)
     step_3.section_2.load_name = MultiSelectField('Name', options=list_connected_loads, flex=50)
     step_3.section_2.remove_button = ActionButton('Remove Load', flex=100, method='remove_load')
 
 
     step_4 = Step("Future Scenario", description="Create scenarios based on the growrates", views=["get_plotly_view_1"])
-    step_4.section_1 = Section("Growrates", description="Specify the growrates per customer side for the substation")
+    step_4.section_1 = Section("Load Growth Factor", description="Specify the Load Growth Factor per customer group for the substation")
     step_4.section_1.dynamic_array_1 = DynamicArray("Growrate")
-    step_4.section_1.dynamic_array_1.customer_type = OptionField("Customer", flex=33, description="Select the previously define customers from the database", options=['Household 1', 'Business 1', 'EV - public'])
-    step_4.section_1.dynamic_array_1.grow = NumberField("Growrate", flex=33, description="Growrate of the number of customers")
-    step_4.section_1.dynamic_array_1.grow_type = OptionField("Type", flex=33, description="Growth type - percentage (baseline 100%) or absolute (number of connections)", options=['%', 'Absolute'], default='%')
+    step_4.section_1.dynamic_array_1.customer_type = OptionField("Customer Group", flex=33, description="Select the previously define customer group from the database to apply a load growth factor to.", options=['Household 1', 'Business 1', 'EV - public'])
+    step_4.section_1.dynamic_array_1.grow = NumberField("Load Growth Factor", flex=33, description="Growrate of the number of customers")
+    #step_4.section_1.dynamic_array_1.grow_type = OptionField("Type", flex=33, description="Growth type - percentage (baseline 100%) or absolute (number of connections)", options=['%', 'Absolute'], default='%')
     
 
 class Controller(ViktorController):
@@ -117,10 +116,10 @@ class Controller(ViktorController):
 
     def add_substation(self, params, **kwargs):
         name = params['step_1']['section_1']['substation_name']
-        power_rating = params['step_1']['section_1']['substation_power']
-        num_feeders = params['step_1']['section_1']['number_of_feeders']
+        #power_rating = params['step_1']['section_1']['substation_power']
+        #num_feeders = params['step_1']['section_1']['number_of_feeders']
         location = (params['step_1']['section_1']['substation_location'].lat, params['step_1']['section_1']['substation_location'].lon)
-        db.Substation(name, location, power_rating, num_feeders).save_substation()
+        db.Substation(name, location).save_substation()
 
     def remove_substation(self, params, **kwargs):
         name = params['step_1']['section_2']['substation_name']
@@ -138,8 +137,6 @@ class Controller(ViktorController):
             substation_name = connection['substation_name']
             substation = db.Substation.get_substation_by_name(substation_name)
             
-            
-
             if substation is None:
                 raise UserError(f"Substation {substation_name} not found")
             
@@ -181,7 +178,7 @@ class Controller(ViktorController):
         fig.update_layout(
             title= profile['name'] + ' - Load Profile',
             xaxis_title='Hour of the Day',
-            yaxis_title='Power Load (kW)',
+            yaxis_title='Normalized Load',
             xaxis=dict(
             tickmode='array',
             tickvals=[time[i] for i in range(0, len(time), 12)],  # Every three hours (12 * 15 minutes = 3 hours)
@@ -208,7 +205,6 @@ class Controller(ViktorController):
         for substation in data['substations']:
             feature = MapPoint(substation['geometry']['coordinates'][1], substation['geometry']['coordinates'][0], description=substation['properties']['name'], identifier=substation['properties']['name'])
             features.append(feature)
-
 
         return MapResult(features)
     
