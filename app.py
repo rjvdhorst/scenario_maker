@@ -80,19 +80,24 @@ class Parametrization(ViktorParametrization):
     step_2.section_1.dynamic_array_1.base_profile = OptionField("Base Profile", options=list_base_profiles(), flex=33)
     step_2.section_1.normalize_button = ActionButton('Add to database', flex=100, method='add_load_profile')
     
-    step_2.section_2 = Section("Investigate Base Profiles")
-    step_2.section_2.introtext = Text("Select a base profile to see the normalized load profile. This profile will be multilpied by the peak load to get the final load profile.")
-    step_2.section_2.select_load_profile = OptionField('Select Profile', options=list_base_profiles(), default='Household', flex=100)
+    step_2.section_2 = Section("Add Base Profiles")
+    step_2.section_2.introtext = Text("A base profile can be set by uploading a CSV file with the load profile data. The CSV file should contain two columns: time and load. Give a name to the profile and upload the file.")
+    step_2.section_2.profile_name = TextField("Name", flex=50)
+    step_2.section_2.upload_file = FileField("Upload CSV File", flex=50)
+    step_2.section_2.upload_button = ActionButton("Upload", flex=100, method='upload_base_profile')
+
+    step_2.section_3 = Section("View Base Load Profile")
+    step_2.section_3.select_load_profile = OptionField("Select Load Profile", options=list_base_profiles(), default='Household', flex=50)
     
-    step_3 = Step("Develop Energy Landscape", views=['get_map_view_1'])
+    step_3 = Step("Develop Energy Landscape", views=['get_plotly_view_2','get_map_view_1'])
     step_3.section_1 = Section("Assign Load Profile to Substation/Transformer")
     step_3.section_1.text_1 = Text("""By assigning a customer group and the amount of customers in that group to a substation or transformer, an aggregated load profile for the specific transformer is developed.""")
-    step_3.section_1.dynamic_array_1 = DynamicArray("Connections")
-    step_3.section_1.dynamic_array_1.substation_name = OptionField("Substation", options=list_substations(), flex=50)
+    step_3.section_1.substation_name = OptionField("Substation", options=list_substations(), flex=50)
+    step_3.section_1.dynamic_array_1 = DynamicArray("### Connections \n Add new loads to the selected substation")
     step_3.section_1.dynamic_array_1.customer_type = OptionField("Customer Group", options=list_customer_profiles(), flex=50)
     step_3.section_1.dynamic_array_1.num_connections = IntegerField("Number of Customers", description="Define how many customers of this type are connected.", flex=50)
     # step_3.section_1.dynamic_array_1.peak_load = NumberField("Peak Load", description="Define the peak load of the connection")
-    step_3.section_1.dynamic_array_1.number_field_1 = NumberField("Variance (%)", description="Define the variance in the load profile.", flex=50)
+    # step_3.section_1.dynamic_array_1.number_field_1 = NumberField("Variance (%)", description="Define the variance in the load profile.", flex=50)
     step_3.section_1.connect_button = ActionButton('Connect', flex=100, method='connect_load')
 
     step_3.section_2 = Section("Remove Load")
@@ -101,8 +106,7 @@ class Parametrization(ViktorParametrization):
     step_3.section_2.load_name = MultiSelectField('Name', options=list_connected_loads, flex=50)
     step_3.section_2.remove_button = ActionButton('Remove Load', flex=100, method='remove_load')
 
-
-    step_4 = Step("Future Scenario", description="Create scenarios based on the growrates", views=["get_plotly_view_1"])
+    step_4 = Step("Load Growth Factor", description="Create scenarios based on the growrates", views=["get_plotly_view_1"])
     step_4.section_1 = Section("Load Growth Factor", description="Specify the Load Growth Factor per customer group for the substation")
     step_4.section_1.dynamic_array_1 = DynamicArray("Growrate")
     step_4.section_1.dynamic_array_1.customer_type = OptionField("Customer Group", flex=33, description="Select the previously define customer group from the database to apply a load growth factor to.", options=['Household 1', 'Business 1', 'EV - public'])
@@ -132,9 +136,9 @@ class Controller(ViktorController):
             load.save_profile()
 
     def connect_load(self, params, **kwargs):
+        substation_name = params['step_3']['section_1']['substation_name']
         data = params['step_3']['section_1']['dynamic_array_1']
         for connection in data:
-            substation_name = connection['substation_name']
             substation = db.Substation.get_substation_by_name(substation_name)
             
             if substation is None:
@@ -152,6 +156,10 @@ class Controller(ViktorController):
         substation = db.Substation.get_substation_by_name(substation_name)
         substation.remove_load(load_name)
         
+    def upload_base_profile(self, params, **kwargs):
+        profile_name = params['step_2']['section_2']['profile_name']
+        file_path = params['step_2']['section_2']['upload_file']
+        ph.BaseProfile(profile_name).upload_profile(file_path)
 
     @staticmethod
     def list_connected_loads(params, **kwargs):
@@ -162,7 +170,7 @@ class Controller(ViktorController):
 
     @PlotlyView('Base Load Profile', duration_guess=1)
     def get_plotly_view_1(self, params, **kwargs):
-        profile_name = params['step_2']['section_2']['select_load_profile']
+        profile_name = params['step_2']['section_3']['select_load_profile']
 
         if profile_name == None:
             profile_name = 'Household'
@@ -195,7 +203,7 @@ class Controller(ViktorController):
         return PlotlyResult(fig)
     
     
-    @MapView('Energy Asset Overview', duration_guess=1)
+    @MapView('Energy Asset Overview', duration_guess=10)
     def get_map_view_1(self, params, **kwargs):
 
         data = db.open_database()
@@ -208,25 +216,37 @@ class Controller(ViktorController):
 
         return MapResult(features)
     
-    @DataView('Summary', duration_guess=1)
-    def overview_data(self, params, **kwargs):
-        data = DataGroup(
-            group_a=DataItem('Total Demand', '', subgroup=DataGroup(
-                sub_group1=DataItem('Average Power Demand', 11, suffix='MW', subgroup=DataGroup(
-                    value_a=DataItem('Households', 5, suffix='MW'),
-                    value_b=DataItem('Business', 5, suffix='MW'),
-                    value_c=DataItem('EV', 1, suffix='MW'))), 
-                sub_group2=DataItem('Max Power Demand', 9, suffix='MW', subgroup=DataGroup(
-                    value_a=DataItem('Households', 3, suffix='MW'),
-                    value_b=DataItem('Business', 5, suffix='MW'),
-                    value_c=DataItem('EV', 1, suffix='MW')),
-            ))),
-        )
-        return DataResult(data)
-    
+    @PlotlyView('Aggregated Load', duration_guess=10)
+    def get_plotly_view_2(self, params, **kwargs):
+        substation_name = params['step_3']['section_1']['substation_name']
 
-    @PDFView("Report Viewer", duration_guess=1)
-    def get_pdf_view(self, params, **kwargs):
-        file_path = Path(__file__).parent / 'tuto2.pdf'
-        return PDFResult.from_path(file_path)
-    
+        substation = db.Substation.get_substation_by_name(substation_name)
+        if substation is None:
+            raise UserError(f"Substation {substation_name} not found")
+
+        aggregated_load = substation.get_total_load()
+        time = list(aggregated_load.keys())
+        values = list(aggregated_load.values())
+
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=time, y=values, mode='lines', name='Load'))
+        
+        fig.update_layout(
+            title= ' Aggregated Load Profile',
+            xaxis_title='Hour of the Day',
+            yaxis_title='Normalized Load',
+            xaxis=dict(
+            tickmode='array',
+            tickvals=[time[i] for i in range(0, len(time), 12)],  # Every three hours (12 * 15 minutes = 3 hours)
+            ticktext=[time[i] for i in range(0, len(time), 12)],
+            range=[0, len(time)-1]
+            )
+        )
+
+        fig = fig.to_json()
+        return PlotlyResult(fig)
+
+
+
+
+        

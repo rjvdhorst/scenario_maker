@@ -2,7 +2,7 @@ from pathlib import Path
 import db_helpers as db
 import json
 from viktor.errors import InputViolation, UserError
-
+import csv
 
 class LoadProfile:
     def __init__(self, name, peak_load, base_profile):
@@ -81,7 +81,31 @@ class BaseProfile:
         base_profiles_folder = Path(__file__).parent / 'base_profiles'
         file_name = self.profile_name + '.json'
         json_file = base_profiles_folder / file_name
-        with open(json_file, 'r') as f:
-            data = json.load(f)
+        try:
+            with open(json_file, 'r') as f:
+                data = json.load(f)
+        except FileNotFoundError:
+            print(f"Error: JSON file '{file_name}' not found.")
+            data = None
         return data
+    
+    @staticmethod
+    def upload_base_profile(filepath, name):
+        # Read the CSV file
+        with open(filepath, 'r') as csv_file:
+            csv_data = csv.reader(csv_file)
+            # Convert the CSV data to a dictionary
+            profile_data = {'time_array': []}
+            for row in csv_data:
+                time = row[0]
+                value = row[1]
+                profile_data['time_array'].append({'time': time, 'value': value})
+        
+        # Save the profile data as a JSON file
+        base_profiles_folder = Path(__file__).parent / 'base_profiles'
+        json_file = base_profiles_folder / (name + '.json')
+        with open(json_file, 'w') as json_file:
+            json.dump(profile_data, json_file)
+        
+        print(f"Base profile '{name}' uploaded successfully.")
 

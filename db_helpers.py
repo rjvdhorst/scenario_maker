@@ -75,14 +75,15 @@ class Substation:
             return total_load_profile
 
         for load in self.loads:
-            load_profile = load['profile']
+            print(load['name'])
+            load_profile = load['profile']['time_array']
             for timestep in load_profile:
                 if timestep['time'] not in total_load_profile:
                     total_load_profile[timestep['time']] = 0
-                total_load_profile[timestep['time']] += timestep['value']
+                total_load_profile[timestep['time']] += timestep['value']*load['num_connections']
         
         total_load_profile['name'] = self.name
-
+        
         return total_load_profile
 
     def to_geojson(self):
@@ -99,6 +100,7 @@ class Substation:
                 'loads': self.loads
             }
         }
+        
     
     @classmethod
     def get_substation_by_name(cls, name):
