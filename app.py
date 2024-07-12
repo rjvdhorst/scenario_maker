@@ -85,25 +85,25 @@ class Parametrization(ViktorParametrization):
     step_2.section_1.dynamic_array_1 = DynamicArray("")
     step_2.section_1.dynamic_array_1.profile_name = TextField("Name", flex=33)
     step_2.section_1.dynamic_array_1.peak_load = NumberField("Peak Load", suffix='KW', flex=33)
-    step_2.section_1.dynamic_array_1.base_profile = OptionField("Base Profile", options=list_base_profiles(), flex=33)
+    step_2.section_1.dynamic_array_1.base_profile = OptionField("Base Load Profile", options=list_base_profiles(), flex=33)
     step_2.section_1.normalize_button = ActionButton('Add to database', flex=100, method='add_load_profile')
     
-    step_2.section_2 = Section("Add Base Profiles")
-    step_2.section_2.introtext = Text("A base profile can be set by uploading a CSV file with the load profile data. The CSV file should contain two columns: time and load. Give a name to the profile and upload the file.")
+    step_2.section_2 = Section("Add Base Load Profiles")
+    step_2.section_2.introtext = Text("A Base Load Profile can be configured by filling the table below. Note that the profile is a normalized profile. A value of 1 is equal to the peak load that will be assigned to the profile in a next step.")
     step_2.section_2.profile_name = TextField("##### Name", flex=80)
-    step_2.section_2.table = Table("Create a New Load Profile", default=create_default_content())
+    step_2.section_2.table = Table("Create a New Base Load Profile", default=create_default_content())
     step_2.section_2.table.time = TextField('time')
     step_2.section_2.table.value = NumberField('value')
-    step_2.section_2.upload_button = ActionButton("Save Profile", flex=60, method='save_base_profile')
+    step_2.section_2.upload_button = ActionButton("Save Base Load Profile", flex=60, method='save_base_profile')
 
     step_2.section_3 = Section("View Base Load Profile")
-    step_2.section_3.select_load_profile = OptionField("Select Load Profile", options=list_base_profiles(), default='Household', flex=50)
+    step_2.section_3.select_load_profile = OptionField("Select Base Load Profile", options=list_base_profiles(), default='Household', flex=50)
     
-    step_3 = Step("Develop Energy Landscape", views=['get_plotly_view_2','get_map_view_1'])
-    step_3.section_1 = Section("Assign Load Profile to Substation/Transformer")
+    step_3 = Step("Develop Energy Landscape", views=['get_map_view_1', 'get_plotly_view_2'])
+    step_3.section_1 = Section("Assign Load Profile(s) to Substation/Transformer")
     step_3.section_1.text_1 = Text("""By assigning a customer group and the amount of customers in that group to a substation or transformer, an aggregated load profile for the specific transformer is developed.""")
     step_3.section_1.substation_name = OptionField("Substation", options=list_substations(), flex=50)
-    step_3.section_1.dynamic_array_1 = DynamicArray("### Connections \n Add new loads to the selected substation")
+    step_3.section_1.dynamic_array_1 = DynamicArray("### Connections \n Add load to the selected substation")
     step_3.section_1.dynamic_array_1.customer_type = OptionField("Customer Group", options=list_customer_profiles(), flex=50)
     step_3.section_1.dynamic_array_1.num_connections = IntegerField("Number of Customers", description="Define how many customers of this type are connected.", flex=50)
     step_3.section_1.connect_button = SetParamsButton('Connect', flex=100, method='connect_load')
@@ -114,13 +114,13 @@ class Parametrization(ViktorParametrization):
     step_3.section_2.load_name = MultiSelectField('Name', options=list_connected_loads, flex=50)
     step_3.section_2.remove_button = ActionButton('Remove Load', flex=100, method='remove_load')
 
-    step_4 = Step("Load Growth Factor", description="Create scenarios based on the growrates", views=["get_plotly_view_1"])
-    step_4.section_1 = Section("Load Growth Factor", description="Specify the Load Growth Factor per customer group for the substation")
-    step_4.section_1.select_substation = OptionField("Substation", options=list_substations(), flex=50)
-    step_4.section_1.dynamic_array_1 = DynamicArray("Growrate")
-    step_4.section_1.dynamic_array_1.customer_type = OptionField("Customer Group", flex=50, description="Select the previously define customer group from the database to apply a load growth factor to.", options=list_customer_profiles())
-    step_4.section_1.dynamic_array_1.grow = NumberField("Load Growth Factor", flex=50, description="Growrate of the number of customers")
-    #step_4.section_1.dynamic_array_1.grow_type = OptionField("Type", flex=33, description="Growth type - percentage (baseline 100%) or absolute (number of connections)", options=['%', 'Absolute'], default='%')
+    # step_4 = Step("Load Growth Factor", description="Create scenarios based on the growrates", views=["get_plotly_view_1"])
+    # step_4.section_1 = Section("Load Growth Factor", description="Specify the Load Growth Factor per customer group for the substation")
+    # step_4.section_1.select_substation = OptionField("Substation", options=list_substations(), flex=50)
+    # step_4.section_1.dynamic_array_1 = DynamicArray("Growrate")
+    # step_4.section_1.dynamic_array_1.customer_type = OptionField("Customer Group", flex=50, description="Select the previously define customer group from the database to apply a load growth factor to.", options=list_customer_profiles())
+    # step_4.section_1.dynamic_array_1.grow = NumberField("Load Growth Factor", flex=50, description="Growrate of the number of customers")
+    # #step_4.section_1.dynamic_array_1.grow_type = OptionField("Type", flex=33, description="Growth type - percentage (baseline 100%) or absolute (number of connections)", options=['%', 'Absolute'], default='%')
     
 
 class Controller(ViktorController):
@@ -193,7 +193,7 @@ class Controller(ViktorController):
         return [load['name'] for load in substation.loads]
     
 
-    @PlotlyView('Base Load Profile', duration_guess=1)
+    @PlotlyView('Selected Base Load Profile', duration_guess=1)
     def get_plotly_view_1(self, params, **kwargs):
         profile_name = params['step_2']['section_3']['select_load_profile']
 
@@ -227,7 +227,7 @@ class Controller(ViktorController):
         
         return PlotlyResult(fig)
 
-    @PlotlyView('Edited Load Profile', duration_guess=1)
+    @PlotlyView('New Base Load Profile', duration_guess=1)
     def plotly_new_load_profile(self, params, **kwargs):
         profile_name = params['step_2']['section_3']['select_load_profile']
 
@@ -275,7 +275,7 @@ class Controller(ViktorController):
 
         return MapResult(features)
     
-    @PlotlyView('Aggregated Load', duration_guess=10)
+    @PlotlyView('Aggregated Load Profile', duration_guess=10)
     def get_plotly_view_2(self, params, **kwargs):
         substation_name = params['step_3']['section_1']['substation_name']
 
@@ -301,7 +301,7 @@ class Controller(ViktorController):
         fig.update_layout(
             title='Aggregated Load Profile',
             xaxis_title='Hour of the Day',
-            yaxis_title='Normalized Load',
+            yaxis_title='Aggregated Load [kW]',
             barmode='stack',
             xaxis=dict(
                 tickmode='array',
