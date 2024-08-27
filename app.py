@@ -2,9 +2,11 @@ from viktor.parametrization import (
     ViktorParametrization,
     TextField,
     NumberField,
+    FileField,
     Table,
     Section,
     Step,
+    Tab,
     Text,
     OptionField,
     IntegerField,
@@ -16,7 +18,10 @@ from viktor.parametrization import (
     MultiSelectField, FileField, ActionButton, SetParamsButton
 )
 from pathlib import Path
+from io import BytesIO
 from viktor import ViktorController
+from viktor_table_view import TableResult, TableView
+
 from viktor.views import (
     PlotlyView,
     MapView,
@@ -31,6 +36,7 @@ from viktor.result import SetParamsResult
 import plotly.graph_objects as go
 import db_helpers as db
 import load_profiles as ph
+import pandas as pd
 
 def list_substations(**kwargs):
     data = db.open_database()
@@ -64,6 +70,10 @@ def create_default_content():
 
 
 class Parametrization(ViktorParametrization):
+    step_0 = Step("Load Growth Factor Regression")
+    step_0.tab_train = Tab("Train Model")
+    step_0.tab_train.file = FileField("Upload File", file_types=[".csv"])
+    
     step_1 = Step("Manage Substations/Transformers", views=["get_map_view_1"])
     step_1.section_1 = Section("Add Substations/Transformers")
     step_1.section_1.intro = Text('Add a new substation to the database. Specify the name and location of the substation or transformer.')
@@ -169,7 +179,6 @@ class Controller(ViktorController):
         print(result)
         return result
         
-
     def remove_load(self, params, **kwargs):
         substation_name = params['step_3']['section_2']['substation_name']
         load_name = params['step_3']['section_2']['load_name']
@@ -186,13 +195,20 @@ class Controller(ViktorController):
 
         ph.BaseProfile.save_base_profile(time_array, profile_name)
 
+    
     @staticmethod
     def list_connected_loads(params, **kwargs):
         substation_name = params['step_3']['section_2']['substation_name']
         substation = db.Substation.get_substation_by_name(substation_name)
         return [load['name'] for load in substation.loads]
     
-
+    @TableView("Overview Input CSV", duration_guess=1)
+    def get_table_view(self, params, **kwargs):
+        upload_file = params["step_0"]["tab_train"]["file"]
+        data_file = BytesIO(upload_file.getvalue_binary())
+        df = pd.read_csv(data_file)
+        return TableResult(df)
+    
     @PlotlyView('Selected Base Load Profile', duration_guess=1)
     def get_plotly_view_1(self, params, **kwargs):
         profile_name = params['step_2']['section_3']['select_load_profile']
@@ -260,7 +276,6 @@ class Controller(ViktorController):
         fig = fig.to_json()
         
         return PlotlyResult(fig)
-    
     
     @MapView('Energy Asset Overview', duration_guess=10)
     def get_map_view_1(self, params, **kwargs):
