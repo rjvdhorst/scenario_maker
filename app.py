@@ -20,14 +20,13 @@ from viktor.parametrization import (
 from pathlib import Path
 from io import BytesIO
 from viktor import ViktorController
-from viktor_table_view import TableResult, TableView
 
 from viktor.views import (
     PlotlyView,
     MapView,
     PlotlyResult,
     MapResult,
-    DataView, DataResult, DataGroup, DataItem, PDFResult, PDFView, MapPoint
+    DataView, DataResult, DataGroup, DataItem, PDFResult, PDFView, MapPoint, TableView, TableResult
 )
 
 from viktor.errors import UserError
@@ -36,7 +35,15 @@ from viktor.result import SetParamsResult
 import plotly.graph_objects as go
 import db_helpers as db
 import load_profiles as ph
+
 import pandas as pd
+from sklearn.model_selection import train_test_split 
+from sklearn.linear_model import LinearRegression 
+from sklearn.metrics import mean_squared_error, mean_absolute_error 
+from sklearn import preprocessing
+import numpy
+import pickle
+
 
 def list_substations(**kwargs):
     data = db.open_database()
@@ -45,7 +52,6 @@ def list_substations(**kwargs):
         return ['No substations']
     substation_names = [substation['properties']['name'] for substation in substations] # Extract the name from each substation
     return substation_names
-
 
 def list_base_profiles(**kwargs):
     return ph.LoadProfile.list_names()
@@ -62,6 +68,15 @@ def list_connected_loads(params, **kwargs):
     else:
         return []
 
+def list_column_names(params, **kwargs):
+    if params["step_0"]["tab_train"]["file"]:
+        upload_file = params["step_0"]["tab_train"]["file"].file
+        data_file = BytesIO(upload_file.getvalue_binary())
+        df = pd.read_csv(data_file)
+        return list(df.columns)
+    else:
+        return []
+
 def create_default_content():
     load_profile = ph.LoadProfile.find_load_profile('Industrial')
     default_content = load_profile.profile_dict()
@@ -70,10 +85,15 @@ def create_default_content():
 
 
 class Parametrization(ViktorParametrization):
-    step_0 = Step("Load Growth Factor Regression")
+    step_0 = Step("Load Growth Factor Regression", views = ["get_table_view", "get_data_view", "get_predict_view"])
     step_0.tab_train = Tab("Train Model")
     step_0.tab_train.file = FileField("Upload File", file_types=[".csv"])
-    
+    step_0.tab_train.features = MultiSelectField('Select Features', options=list_column_names, flex=50)
+    step_0.tab_train.target = MultiSelectField('Select Target', options=list_column_names, flex=50)
+    step_0.tab_train.testset = NumberField("Test Sample Size", min=0.2, max=0.5, step =0.1, variant='slider')
+    step_0.tab_train.model_name = TextField("Model Name")
+    step_0.tab_train.train = ActionButton("Train Model", method = 'train_model')
+
     step_1 = Step("Manage Substations/Transformers", views=["get_map_view_1"])
     step_1.section_1 = Section("Add Substations/Transformers")
     step_1.section_1.intro = Text('Add a new substation to the database. Specify the name and location of the substation or transformer.')
@@ -136,6 +156,34 @@ class Parametrization(ViktorParametrization):
 class Controller(ViktorController):
     label = "My Entity Type"
     parametrization = Parametrization
+
+    def train_model(self, params, **kwargs):
+        upload_file = params["step_0"]["tab_train"]["file"].file
+        data_file = BytesIO(upload_file.getvalue_binary())
+        df = pd.read_csv(data_file)
+        X = df[params["step_0"]["tab_train"]["features"]]
+        y = df[params["step_0"]["tab_train"]["target"][0]]
+
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=params["step_0"]["tab_train"]["testset"], random_state=101)
+        model = LinearRegression()
+        model.fit(X_train, y_train)
+        predictions = model.predict(X_test)
+        model_name = params["step_0"]["tab_train"]["model_name"]
+        
+        with open("models/{}.pkl".format(model_name), "wb") as f:
+            pickle.dump(model, f)
+        
+        db.add_model(
+            
+            params["step_0"]["tab_train"]["model_name"], 
+            list(X.columns),
+            list(model.coef_),
+            list(y_test),
+            list(predictions),
+            mean_squared_error(y_test, predictions), 
+            mean_absolute_error(y_test, predictions))
+        
+        print(predictions)
 
     def add_substation(self, params, **kwargs):
         name = params['step_1']['section_1']['substation_name']
@@ -201,14 +249,50 @@ class Controller(ViktorController):
         substation_name = params['step_3']['section_2']['substation_name']
         substation = db.Substation.get_substation_by_name(substation_name)
         return [load['name'] for load in substation.loads]
-    
-    @TableView("Overview Input CSV", duration_guess=1)
+
+    @TableView("Overview Input CSV", duration_guess=20)
     def get_table_view(self, params, **kwargs):
-        upload_file = params["step_0"]["tab_train"]["file"]
-        data_file = BytesIO(upload_file.getvalue_binary())
-        df = pd.read_csv(data_file)
-        return TableResult(df)
+        if params["step_0"]["tab_train"]["file"].file:
+            upload_file = params["step_0"]["tab_train"]["file"].file
+            data_file = BytesIO(upload_file.getvalue_binary())
+            df = pd.read_csv(data_file)
+            return TableResult(df)
     
+    @DataView("Model Performance", duration_guess=20)
+    def get_data_view(self, params, **kwargs):
+        data = db.open_models()
+        data = data['models']
+        data_items = []
+        for i in data:
+            data_items.append(
+                DataItem(i['model_name'], ' ', subgroup = DataGroup(
+                    DataItem('MSE', i['MSE']),
+                    DataItem('MAE', i['MAE']),
+                    DataItem('Features \n \n', i['features'])
+                ))
+            )
+        models = DataGroup(DataItem('Models', '', subgroup = DataGroup(*data_items)))
+        return DataResult(models)
+    
+    @PlotlyView('Prediction Analysis', duration_guess=10)
+    def get_predict_view(self, params, **kwargs):
+        
+        models = db.open_models()
+        for i in models['models']:
+            if i['model_name'] == 'test2':
+                predictions = i['predictions']
+                y_test = i['y_test']
+            
+        data = []
+        data.append(go.Line(y=y_test, name = 'Test Data', line=dict(color='lightgrey', width=3)))
+        data.append(go.Line(y=predictions, name = 'Predicted Values', line=dict(color='royalblue', width=3)))
+
+        fig = go.Figure(data = data)
+        fig.update_layout(plot_bgcolor='white')
+        fig = fig.to_json()
+        
+        return PlotlyResult(fig)
+     
     @PlotlyView('Selected Base Load Profile', duration_guess=1)
     def get_plotly_view_1(self, params, **kwargs):
         profile_name = params['step_2']['section_3']['select_load_profile']

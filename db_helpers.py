@@ -2,7 +2,6 @@ import json
 from pathlib import Path
 import os
 
-
 def open_database():
     json_file = Path(__file__).parent / 'data.json'
 
@@ -16,6 +15,32 @@ def save_database(data):
     with open(json_file, 'w') as f:
         json.dump(data, f)
 
+def open_models():
+    json_file = Path(__file__).parent / 'models.json'
+
+    with open(json_file, 'r') as f:
+        data = json.load(f)
+        
+    return data
+
+def add_model(name, features, coef, y_test, predictions, MSE, MAE):
+    json_file = Path(__file__).parent / 'models.json'
+    
+    with open(json_file, 'r') as f:
+        data = json.load(f)
+    
+    models = data['models']
+    models.append({
+        'model_name' : name,
+        'features' : features, 
+        'coefficients' : coef,
+        'y_test' : y_test,
+        'predictions' : predictions,
+        'MSE' : MSE,
+        'MAE' : MAE})
+    
+    with open(json_file, 'w') as f:
+        json.dump(data, f)
 
 class Substation:
     def __init__(self, name, location):

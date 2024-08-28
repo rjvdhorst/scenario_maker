@@ -1,3 +1,4 @@
-viktor==14.10.0
+viktor==14.13.0
 plotly
 viktor-table-view
+scikit-learn
