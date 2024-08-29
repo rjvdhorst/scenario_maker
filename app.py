@@ -43,6 +43,8 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error
 from sklearn import preprocessing
 import numpy
 import pickle
+from plotly.subplots import make_subplots
+from statistics import mean
 
 
 def list_substations(**kwargs):
@@ -83,16 +85,22 @@ def create_default_content():
     default_array = default_content['time_array']
     return default_array
 
-
 class Parametrization(ViktorParametrization):
-    step_0 = Step("Load Growth Factor Regression", views = ["get_table_view", "get_data_view", "get_predict_view"])
-    step_0.tab_train = Tab("Train Model")
+    step_0 = Step("Load Growth Factor Regression", views = ["get_table_view", "get_data_view", "get_predict_view", "get_forecast_view"], width=30)
+    # TODO: Tab 0 Upload File
+    step_0.tab_train = Tab("[I] Train Model")
     step_0.tab_train.file = FileField("Upload File", file_types=[".csv"])
     step_0.tab_train.features = MultiSelectField('Select Features', options=list_column_names, flex=50)
     step_0.tab_train.target = MultiSelectField('Select Target', options=list_column_names, flex=50)
     step_0.tab_train.testset = NumberField("Test Sample Size", min=0.2, max=0.5, step =0.1, variant='slider')
     step_0.tab_train.model_name = TextField("Model Name")
     step_0.tab_train.train = ActionButton("Train Model", method = 'train_model')
+
+    step_0.tab_evaluate = Tab("[II] Evaluate Model")
+    step_0.tab_evaluate.model_name = TextField('Model Name')
+    
+    step_0.tab_forecast = Tab("[II] Forecast")
+    step_0.tab_forecast.model_name = TextField('Model Name')
 
     step_1 = Step("Manage Substations/Transformers", views=["get_map_view_1"])
     step_1.section_1 = Section("Add Substations/Transformers")
@@ -161,6 +169,7 @@ class Controller(ViktorController):
         upload_file = params["step_0"]["tab_train"]["file"].file
         data_file = BytesIO(upload_file.getvalue_binary())
         df = pd.read_csv(data_file)
+        df = df.dropna()
         X = df[params["step_0"]["tab_train"]["features"]]
         y = df[params["step_0"]["tab_train"]["target"][0]]
 
@@ -250,7 +259,7 @@ class Controller(ViktorController):
         substation = db.Substation.get_substation_by_name(substation_name)
         return [load['name'] for load in substation.loads]
 
-    @TableView("Overview Input CSV", duration_guess=20)
+    @TableView("[I] Overview Input", duration_guess=20)
     def get_table_view(self, params, **kwargs):
         if params["step_0"]["tab_train"]["file"].file:
             upload_file = params["step_0"]["tab_train"]["file"].file
@@ -258,7 +267,7 @@ class Controller(ViktorController):
             df = pd.read_csv(data_file)
             return TableResult(df)
     
-    @DataView("Model Performance", duration_guess=20)
+    @DataView("[I] Model Performance Overview", duration_guess=20)
     def get_data_view(self, params, **kwargs):
         data = db.open_models()
         data = data['models']
@@ -274,25 +283,115 @@ class Controller(ViktorController):
         models = DataGroup(DataItem('Models', '', subgroup = DataGroup(*data_items)))
         return DataResult(models)
     
-    @PlotlyView('Prediction Analysis', duration_guess=10)
+    @PlotlyView('[II] Prediction Analysis', duration_guess=10)
     def get_predict_view(self, params, **kwargs):
         
-        models = db.open_models()
-        for i in models['models']:
-            if i['model_name'] == 'test2':
-                predictions = i['predictions']
-                y_test = i['y_test']
+        model_name = params["step_0"]["tab_evaluate"]["model_name"]
+
+        with open("models/{}.pkl".format(model_name), "rb") as f:
+            model = pickle.load(f)
+        
+        upload_file = params["step_0"]["tab_train"]["file"].file
+        data_file = BytesIO(upload_file.getvalue_binary())
+        df = pd.read_csv(data_file)
+        df = df.dropna()
+        
+        data = db.open_models()
+        data = data['models']
+        for m in data:
+            if m['model_name'] == model_name:
+                model_features = m['features']
+                
+                # TODO: add target as model attribute when uploading model
+                model_target = 'Y house price of unit area'
+        
+        df_23_ytest = df[df['Time'].str.contains('22|23')][model_target]
+        df_23_Xtest = df[df['Time'].str.contains('22|23')][model_features]
+
+        x_ax = df[df['Time'].str.contains('22|23')]['Time']
+        
+        predictions = model.predict(df_23_Xtest)
+        
+        print(list(df_23_ytest))
+        print(predictions)
             
         data = []
-        data.append(go.Line(y=y_test, name = 'Test Data', line=dict(color='lightgrey', width=3)))
-        data.append(go.Line(y=predictions, name = 'Predicted Values', line=dict(color='royalblue', width=3)))
+        data.append(go.Line(y=df_23_ytest, x=x_ax, name = 'Actual Data', line=dict(color='lightgrey', width=3)))
+        data.append(go.Line(y=predictions, x=x_ax, name = 'Predicted Values', line=dict(color='royalblue', width=3)))
 
         fig = go.Figure(data = data)
-        fig.update_layout(plot_bgcolor='white')
+        fig.update_layout(plot_bgcolor='whitesmoke', hovermode = 'x')
         fig = fig.to_json()
         
         return PlotlyResult(fig)
-     
+    
+    @PlotlyView('[III] Forecast', duration_guess=10)
+    def get_forecast_view(self, params, **kwargs):
+        
+        model_name = params["step_0"]["tab_forecast"]["model_name"]
+
+        with open("models/{}.pkl".format(model_name), "rb") as f:
+            model = pickle.load(f)
+        
+        upload_file = params["step_0"]["tab_train"]["file"].file
+        data_file = BytesIO(upload_file.getvalue_binary())
+        df = pd.read_csv(data_file)
+        
+        data = db.open_models()
+        data = data['models']
+        for m in data:
+            if m['model_name'] == model_name:
+                model_features = m['features']
+                
+                # TODO: add target as model attribute when uploading model
+                model_target = 'Y house price of unit area'
+        
+        df_24_x_pred = df[df['Time'].str.contains('24')][model_features][6:]
+        old_values = list(df[df['Time'].str.contains('23')][model_target])[6:]
+        predictions = model.predict(df_24_x_pred)
+
+        result = []
+        for i in range(len(old_values)):
+            result.append(round(((predictions[i] - old_values[i])/old_values[i])*100))
+        
+        x_ax = df[df['Time'].str.contains('24')]['Time'][len(df_24_x_pred):]
+        
+        fig = make_subplots(specs=[[{"secondary_y": True}]])
+ 
+        fig.add_trace(
+        go.Bar(y=result, x=x_ax, name="LG %", opacity=0.5, marker=dict(color='lightseagreen')),
+        secondary_y=False,
+        )
+
+        fig.add_trace(
+            go.Scatter(y=[round(mean(result))]*len(old_values), x=x_ax, mode = 'lines', name="Avg. LG %", line=dict(color='darkorange', width = 4)),
+            secondary_y=False,
+        )
+
+        fig.add_trace(
+            go.Scatter(y=old_values, x=x_ax, name="Old Data [kW]", line=dict(color='lightslategrey', width=3)),
+            secondary_y=True,
+        )
+
+        fig.add_trace(
+            go.Scatter(y=predictions, x=x_ax, name="Prediction [kW]", line=dict(color='royalblue', width=3)),
+            secondary_y=True,
+        )
+
+        # Add figure title
+        fig.update_layout(
+            plot_bgcolor = "whitesmoke"
+        )
+
+        # Set y-axes titles
+        fig.update_yaxes(title_text="<b>Load Growth Factor</b> %", secondary_y=False)
+        fig.update_yaxes(title_text="<b>Peak Load</b> kW", secondary_y=True)
+        fig.update_layout(hovermode="x")
+        fig = fig.to_json()
+        
+        return PlotlyResult(fig)
+    
+    
     @PlotlyView('Selected Base Load Profile', duration_guess=1)
     def get_plotly_view_1(self, params, **kwargs):
         profile_name = params['step_2']['section_3']['select_load_profile']
