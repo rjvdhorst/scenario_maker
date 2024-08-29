@@ -37,7 +37,8 @@ def add_model(name, features, coef, y_test, predictions, MSE, MAE):
         'y_test' : y_test,
         'predictions' : predictions,
         'MSE' : MSE,
-        'MAE' : MAE})
+        'MAE' : MAE
+        })
     
     with open(json_file, 'w') as f:
         json.dump(data, f)

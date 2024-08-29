@@ -99,7 +99,7 @@ class Parametrization(ViktorParametrization):
     step_0.tab_evaluate = Tab("[II] Evaluate Model")
     step_0.tab_evaluate.model_name = TextField('Model Name')
     
-    step_0.tab_forecast = Tab("[II] Forecast")
+    step_0.tab_forecast = Tab("[III] Forecast")
     step_0.tab_forecast.model_name = TextField('Model Name')
 
     step_1 = Step("Manage Substations/Transformers", views=["get_map_view_1"])
