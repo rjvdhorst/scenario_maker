@@ -19,14 +19,14 @@ from viktor.parametrization import (
 )
 from pathlib import Path
 from io import BytesIO
-from viktor import ViktorController
+from viktor import ViktorController, Color
 
 from viktor.views import (
     PlotlyView,
     MapView,
     PlotlyResult,
     MapResult,
-    DataView, DataResult, DataGroup, DataItem, PDFResult, PDFView, MapPoint, TableView, TableResult
+    DataView, DataResult, DataGroup, DataItem, PDFResult, PDFView, MapPoint, TableView, TableResult, GeoJSONResult, GeoJSONView
 )
 
 from viktor.errors import UserError
@@ -111,9 +111,16 @@ class Parametrization(ViktorParametrization):
     step_1.section_1.substation_location = GeoPointField('#### Location')
     step_1.section_1.add_button = ActionButton('Add to Database', flex=100, method='add_substation')
 
-    step_1.section_2 = Section("Remove Substations/Transformers", description="Remove")
-    step_1.section_2.substation_name = OptionField('Name', options=list_substations(), flex=50)
-    step_1.section_2.remove_button = ActionButton('Remove from Database', flex=50, method='remove_substation')
+    step_1.section_2 = Section("Add AMI", description="Add an AMI to the database")
+    step_1.section_2.ami_id = TextField('AMI ID', flex=50)
+    step_1.section_2.ami_location = GeoPointField('Location')
+    step_1.section_2.customer_type = OptionField('Customer Type', options=['Household', 'Industrial', 'Commercial'], flex=50)
+    step_1.section_2.substation = OptionField('Substation', options=list_substations(), flex=50)
+    step_1.section_2.add_button = ActionButton('Add to Database', flex=100, method='add_ami')
+
+    step_1.section_3 = Section("Remove Substations/Transformers", description="Remove")
+    step_1.section_3.substation_name = OptionField('Name', options=list_substations(), flex=50)
+    step_1.section_3.remove_button = ActionButton('Remove from Database', flex=50, method='remove_substation')
 
     step_2 = Step("Manage Load Profiles", description="Manage load profiles for different customer groups", views=['plotly_new_load_profile', "get_plotly_view_1"])
 
@@ -138,20 +145,24 @@ class Parametrization(ViktorParametrization):
     step_2.section_3.select_load_profile = OptionField("Select Base Load Profile", options=list_base_profiles(), default='Household', flex=50)
     
     step_3 = Step("Develop Energy Landscape", views=['get_map_view_1', 'get_plotly_view_2'])
-    step_3.section_1 = Section("Assign Load Profile(s) to Substation/Transformer")
-    step_3.section_1.text_1 = Text("""By assigning a customer group and the amount of customers in that group to a substation or transformer, an aggregated load profile for the specific transformer is developed.""")
+    step_3.section_1 = Section("Load growth factor", description="Assign a load growth factor to each customer group for the selected substation.")
+    step_3.section_1.text_1 = Text("""To carefully predict the load on the substation, a different load growth factor can be assigned to each customer group.""")
     step_3.section_1.substation_name = OptionField("Substation", options=list_substations(), flex=50)
-    step_3.section_1.dynamic_array_1 = DynamicArray("### Connections \n Add load to the selected substation")
-    step_3.section_1.dynamic_array_1.customer_type = OptionField("Customer Group", options=list_customer_profiles(), flex=50)
-    step_3.section_1.dynamic_array_1.num_connections = IntegerField("Number of Customers", description="Define how many customers of this type are connected.", flex=50)
-    step_3.section_1.connect_button = SetParamsButton('Connect', flex=100, method='connect_load')
+    step_3.section_1.table = Table("### Load Growth Factor \n Add load to the selected substation", default=[])
+    step_3.section_1.table.customer_type = OptionField("Customer Group", options=['Household', 'Industrial', 'Commercial'])
+    step_3.section_1.table.lgf = IntegerField("Load Growth Factor (percentage)", description="Define how many customers of this type are connected.")
 
-    step_3.section_2 = Section("Remove Load")
-    step_3.section_2.intro = Text('This section allows you to remove previously assigned load from the substation/transformer. Select the loads that need to be removed, and press the button.')
-    step_3.section_2.substation_name = OptionField('Substation/Transformer', options=list_substations(), flex=50)
-    step_3.section_2.load_name = MultiSelectField('Name', options=list_connected_loads, flex=50)
-    step_3.section_2.remove_button = ActionButton('Remove Load', flex=100, method='remove_load')
+    # step_3.section_1.connect_button = SetParamsButton('Connect', flex=100, method='connect_load')
 
+    step_3.section_2 = Section("Rooftop Solar", description="Assign a peak power production load to substation, based on the number of solar panels installed.")
+    step_3.section_2.intro = Text('This section allows you to add and simulate the impact of rooftop solar panels on the substation.')
+    step_3.section_2.remove_button = NumberField('Load', suffix='KW', flex=50)
+
+    step_3.section_3 = Section("EV charging landscape", description="Add EV charging stations to the substation. Choose between the different types of charging stations and their corresponding chargin behaviour.")
+    step_3.section_3.intro = Text('This section allows you to add and simulate the impact of EV charging stations on the substation.')
+    step_3.section_3.array = DynamicArray("EV Charging Stations")
+    step_3.section_3.array.type = OptionField("#### Type", options=['Slow (7 KW)', 'Fast (22 KW)', 'Ultra Fast (70 KW)'], flex=50)
+    step_3.section_3.array.number = IntegerField("#### Number", flex=50 )
     # step_4 = Step("Load Growth Factor", description="Create scenarios based on the growrates", views=["get_plotly_view_1"])
     # step_4.section_1 = Section("Load Growth Factor", description="Specify the Load Growth Factor per customer group for the substation")
     # step_4.section_1.select_substation = OptionField("Substation", options=list_substations(), flex=50)
@@ -201,8 +212,15 @@ class Controller(ViktorController):
         location = (params['step_1']['section_1']['substation_location'].lat, params['step_1']['section_1']['substation_location'].lon)
         db.Substation(name, location).save_substation()
 
+    def add_ami(self, params, **kwargs):
+        ami_id = params['step_1']['section_2']['ami_id']
+        location = (params['step_1']['section_2']['ami_location'].lat, params['step_1']['section_2']['ami_location'].lon)
+        customer_type = params['step_1']['section_2']['customer_type']
+        substation = params['step_1']['section_2']['substation']
+        db.AMI(ami_id, location, customer_type, substation).save_AMI()
+
     def remove_substation(self, params, **kwargs):
-        name = params['step_1']['section_2']['substation_name']
+        name = params['step_1']['section_3']['substation_name']
         db.Substation.remove_substation(name)
 
     def add_load_profile(self, params, **kwargs):
@@ -234,6 +252,8 @@ class Controller(ViktorController):
             }
         })
         print(result)
+
+    
         return result
         
     def remove_load(self, params, **kwargs):
@@ -460,59 +480,75 @@ class Controller(ViktorController):
         
         return PlotlyResult(fig)
     
-    @MapView('Energy Asset Overview', duration_guess=10)
+    @GeoJSONView('Energy Asset Overview', duration_guess=10)
     def get_map_view_1(self, params, **kwargs):
 
         data = db.open_database()
 
         # Show all substations
         features = []
+
         for substation in data['substations']:
-            feature = MapPoint(substation['geometry']['coordinates'][1], substation['geometry']['coordinates'][0], description=substation['properties']['name'], identifier=substation['properties']['name'])
-            features.append(feature)
+            features.append(substation)
+        for AMI in data['AMIs']:
+            features.append(AMI)
+
+        geojson = {"type": "FeatureCollection",
+                   "features": features}
+        
+        return GeoJSONResult(geojson)
 
         return MapResult(features)
     
     @PlotlyView('Aggregated Load Profile', duration_guess=10)
     def get_plotly_view_2(self, params, **kwargs):
-        substation_name = params['step_3']['section_1']['substation_name']
+        import plotly.graph_objects as go
 
+        substation_name = params['step_3']['section_1']['substation_name']
+        
         substation = db.Substation.get_substation_by_name(substation_name)
         if substation is None:
             raise UserError(f"Substation {substation_name} not found")
 
-        detailed_profiles = substation.get_detailed_load_profiles()
-        time = sorted(detailed_profiles.keys())
+        # Get all AMIs connected to the selected substation
+        connected_amis = substation.get_connected_AMIs()
 
+        # Initialize a dictionary to store aggregated load per customer type
+        aggregated_profiles = {}
+
+        # List of all time intervals (assuming they are the same for all AMIs)
+        time_intervals = [entry['time'] for entry in connected_amis[0]['properties']['load']['time_array']]
+
+        # Initialize aggregated profiles with zeros for each customer type
+        for ami in connected_amis:
+            customer_type = ami['properties']['customer_type']
+            if customer_type not in aggregated_profiles:
+                aggregated_profiles[customer_type] = [0] * len(time_intervals)
+
+            # Aggregate the loads
+            for i, entry in enumerate(ami['properties']['load']['time_array']):
+                aggregated_profiles[customer_type][i] += entry['value']
+
+        # Now, we create the stacked bar chart
         fig = go.Figure()
 
-        # Collecting all load names
-        load_names = set()
-        for loads_at_time in detailed_profiles.values():
-            load_names.update(loads_at_time.keys())
-        
-        # Create a trace for each load
-        for load_name in load_names:
-            values = [detailed_profiles[t].get(load_name, 0) for t in time]
-            fig.add_trace(go.Bar(x=time, y=values, name=load_name))
+        # Add each customer type to the stacked bar chart
+        for customer_type, load_values in aggregated_profiles.items():
+            fig.add_trace(go.Bar(
+                x=time_intervals,
+                y=load_values,
+                name=customer_type
+            ))
 
+        # Customize layout
         fig.update_layout(
-            title='Aggregated Load Profile',
-            xaxis_title='Hour of the Day',
-            yaxis_title='Aggregated Load [kW]',
             barmode='stack',
-            xaxis=dict(
-                tickmode='array',
-                tickvals=[time[i] for i in range(0, len(time), 12)],  # Every three hours (12 * 15 minutes = 3 hours)
-                ticktext=[time[i] for i in range(0, len(time), 12)],
-                range=[0, len(time)-1]
-            )
+            title=f'Aggregated Load Profile for Substation {substation_name}',
+            xaxis_title='Time',
+            yaxis_title='Load (kW)',
+            legend_title='Customer Type'
         )
 
         fig = fig.to_json()
+
         return PlotlyResult(fig)
-
-
-
-
-        

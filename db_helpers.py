@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 import os
+from load_profiles import LoadProfile
 
 def open_database():
     json_file = Path(__file__).parent / 'data.json'
@@ -137,9 +138,20 @@ class Substation:
                 'name': self.name,
                 #'power_rating': self.power_rating,
                 #'num_feeders': self.num_feeders,
-                'loads': self.loads
+                'loads': self.loads,
+                'title': self.name
             }
         }
+
+    def get_connected_AMIs(self):
+        data = open_database()
+        AMIs = data['AMIs']
+        connected_AMIs = []
+
+        for AMI in AMIs:
+            if AMI['properties']['substation'] == self.name:
+                connected_AMIs.append(AMI)
+        return connected_AMIs
         
     
     @classmethod
@@ -161,3 +173,58 @@ class Substation:
         return None 
 
 
+class AMI:
+    def __init__(self, AMI_id, location, customer_type, substation):
+        self.AMI_id = AMI_id
+        self.location = {'lon': location[0], 'lat': location[1]}  # Swap the order of coordinates
+        self.customer_type = customer_type
+        self.power_rating = 7.2
+        self.substation = substation
+        #self.num_feeders = num_feeders
+        
+        if self.customer_type == 'Household':
+            self.load = LoadProfile('Household', self.power_rating, 'Household').scaled_profile
+        if self.customer_type == 'Industrial':
+            self.load = LoadProfile('Industrial', self.power_rating, 'Industrial').scaled_profile
+        if self.customer_type == 'Commercial': 
+            self.load = LoadProfile('Commercial', self.power_rating, 'Commercial').scaled_profile
+
+    def save_AMI(self):
+        data = open_database()
+        AMIs = data['AMIs']
+
+        # Find the AMI if it exists and update it
+        for i, AMI in enumerate(AMIs):
+            if AMI['properties']['AMI_id'] == self.AMI_id:
+                AMIs[i] = self.to_geojson()
+                break
+        else:
+            # AMI not found, add it
+            AMIs.append(self.to_geojson())
+
+        save_database(data)
+
+    
+    def to_geojson(self):
+        if self.customer_type == 'Household':
+            color = '#ffff00'
+        elif self.customer_type == 'Industrial':
+            color = '#ff0000'
+        elif self.customer_type == 'Commercial':
+            color = '#0000ff'
+        return {
+            'type': 'Feature',
+            'geometry': {
+                'type': 'Point',
+                'coordinates': [self.location['lat'], self.location['lon']]
+            },
+            'properties': {
+                'AMI_id': self.AMI_id,
+                'customer_type': self.customer_type,
+                'marker-color': color,
+                'power_rating': self.power_rating,
+                'load': self.load.profile_dict(),
+                'substation': self.substation,
+                'title': self.AMI_id
+            }
+        }
