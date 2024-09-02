@@ -87,20 +87,21 @@ def create_default_content():
 
 class Parametrization(ViktorParametrization):
     step_0 = Step("Load Growth Factor Regression", views = ["get_table_view", "get_data_view", "get_predict_view", "get_forecast_view"], width=30)
+    
     # TODO: Tab 0 Upload File
     step_0.tab_train = Tab("[I] Train Model")
-    step_0.tab_train.file = FileField("Upload File", file_types=[".csv"])
+    step_0.tab_train.file = FileField("Upload File", file_types=[".csv"], flex = 100)
     step_0.tab_train.features = MultiSelectField('Select Features', options=list_column_names, flex=50)
-    step_0.tab_train.target = MultiSelectField('Select Target', options=list_column_names, flex=50)
-    step_0.tab_train.testset = NumberField("Test Sample Size", min=0.2, max=0.5, step =0.1, variant='slider')
-    step_0.tab_train.model_name = TextField("Model Name")
-    step_0.tab_train.train = ActionButton("Train Model", method = 'train_model')
+    step_0.tab_train.target = OptionField('Select Target', options=list_column_names, flex=50)
+    step_0.tab_train.testset = NumberField("Test Sample Size", min=0.2, max=0.5, step =0.1, variant='slider', flex =100)
+    step_0.tab_train.model_name = TextField("Model Name", flex=100)
+    step_0.tab_train.train = ActionButton("Train Model", method = 'train_model', flex=100)
 
     step_0.tab_evaluate = Tab("[II] Evaluate Model")
-    step_0.tab_evaluate.model_name = TextField('Model Name')
+    step_0.tab_evaluate.model_name = TextField('Model Name', flex = 100)
     
     step_0.tab_forecast = Tab("[III] Forecast")
-    step_0.tab_forecast.model_name = TextField('Model Name')
+    step_0.tab_forecast.model_name = TextField('Model Name', flex = 100)
 
     step_1 = Step("Manage Substations/Transformers", views=["get_map_view_1"])
     step_1.section_1 = Section("Add Substations/Transformers")
@@ -171,7 +172,7 @@ class Controller(ViktorController):
         df = pd.read_csv(data_file)
         df = df.dropna()
         X = df[params["step_0"]["tab_train"]["features"]]
-        y = df[params["step_0"]["tab_train"]["target"][0]]
+        y = df[params["step_0"]["tab_train"]["target"]]
 
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=params["step_0"]["tab_train"]["testset"], random_state=101)
         model = LinearRegression()
@@ -184,13 +185,15 @@ class Controller(ViktorController):
         
         db.add_model(
             
-            params["step_0"]["tab_train"]["model_name"], 
+            params["step_0"]["tab_train"]["model_name"],
+            params["step_0"]["tab_train"]["target"],
             list(X.columns),
             list(model.coef_),
             list(y_test),
             list(predictions),
             mean_squared_error(y_test, predictions), 
-            mean_absolute_error(y_test, predictions))
+            mean_absolute_error(y_test, predictions)
+            )
         
         print(predictions)
 
@@ -274,13 +277,14 @@ class Controller(ViktorController):
         data_items = []
         for i in data:
             data_items.append(
-                DataItem(i['model_name'], ' ', subgroup = DataGroup(
+                DataItem("Model", "**{}**".format(i['model_name']), subgroup = DataGroup(
+                    DataItem('Target', i['target']),
+                    DataItem('Features', ' ', subgroup = DataGroup(*[DataItem(' ', x) for x in i['features']])),
                     DataItem('MSE', i['MSE']),
                     DataItem('MAE', i['MAE']),
-                    DataItem('Features \n \n', i['features'])
-                ))
-            )
-        models = DataGroup(DataItem('Models', '', subgroup = DataGroup(*data_items)))
+                )
+            ))
+        models = DataGroup(*data_items)
         return DataResult(models)
     
     @PlotlyView('[II] Prediction Analysis', duration_guess=10)
@@ -299,11 +303,10 @@ class Controller(ViktorController):
         data = db.open_models()
         data = data['models']
         for m in data:
+            
             if m['model_name'] == model_name:
                 model_features = m['features']
-                
-                # TODO: add target as model attribute when uploading model
-                model_target = 'Y house price of unit area'
+                model_target = m['target']
         
         df_23_ytest = df[df['Time'].str.contains('22|23')][model_target]
         df_23_Xtest = df[df['Time'].str.contains('22|23')][model_features]
@@ -342,24 +345,27 @@ class Controller(ViktorController):
         for m in data:
             if m['model_name'] == model_name:
                 model_features = m['features']
-                
-                # TODO: add target as model attribute when uploading model
-                model_target = 'Y house price of unit area'
+                model_target = m['target']
         
-        df_24_x_pred = df[df['Time'].str.contains('24')][model_features][6:]
-        old_values = list(df[df['Time'].str.contains('23')][model_target])[6:]
+        df_select = df[df[model_target].isnull()]
+        print(df_select)
+        df_24_x_pred = df_select[model_features]
+        print(df_24_x_pred)
+        index_start = df_select.index[0]
+        index_end = index_start + len(df_select)
+        old_values = list(df[model_target])[index_start-12:index_end-12]
         predictions = model.predict(df_24_x_pred)
 
         result = []
         for i in range(len(old_values)):
             result.append(round(((predictions[i] - old_values[i])/old_values[i])*100))
         
-        x_ax = df[df['Time'].str.contains('24')]['Time'][len(df_24_x_pred):]
+        x_ax = df['Time'][index_start:index_end]
         
         fig = make_subplots(specs=[[{"secondary_y": True}]])
  
         fig.add_trace(
-        go.Bar(y=result, x=x_ax, name="LG %", opacity=0.5, marker=dict(color='lightseagreen')),
+        go.Bar(y=result, x=x_ax, name="LG %", opacity=0.3, marker=dict(color='lightsteelblue')),
         secondary_y=False,
         )
 
