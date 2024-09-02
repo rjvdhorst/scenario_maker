@@ -102,7 +102,7 @@ class Parametrization(ViktorParametrization):
     step_0.tab_forecast = Tab("[III] Forecast")
     step_0.tab_forecast.model_name = TextField('Model Name')
 
-    step_1 = Step("Manage Substations/Transformers", views=["get_map_view_1"])
+    step_1 = Step("Manage Substations/Transformers", views=["get_map_view_1"], enabled=False)
     step_1.section_1 = Section("Add Substations/Transformers")
     step_1.section_1.intro = Text('Add a new substation to the database. Specify the name and location of the substation or transformer.')
     step_1.section_1.substation_name = TextField('#### Name', flex = 100)
@@ -121,8 +121,9 @@ class Parametrization(ViktorParametrization):
     step_1.section_3 = Section("Remove Substations/Transformers", description="Remove")
     step_1.section_3.substation_name = OptionField('Name', options=list_substations(), flex=50)
     step_1.section_3.remove_button = ActionButton('Remove from Database', flex=50, method='remove_substation')
+    step_1.section_3.create_lines = ActionButton('Create lines', flex=50, method='create_lines')
 
-    step_2 = Step("Manage Load Profiles", description="Manage load profiles for different customer groups", views=['plotly_new_load_profile', "get_plotly_view_1"])
+    step_2 = Step("Manage Load Profiles", description="Manage load profiles for different customer groups", views=['plotly_new_load_profile', "get_plotly_view_1"], enabled=False)
 
     step_2.section_1 = Section("Create Customer Group", description="Customize the specified load profiles. ")
     step_2.section_1.intro = Text("""Create load profiles for different customer types. Specify the name, peak load, and base profile. The base profile is a predefined profile that can be scaled to the peak load.""")
@@ -148,9 +149,9 @@ class Parametrization(ViktorParametrization):
     step_3.section_1 = Section("Load growth factor", description="Assign a load growth factor to each customer group for the selected substation.")
     step_3.section_1.text_1 = Text("""To carefully predict the load on the substation, a different load growth factor can be assigned to each customer group.""")
     step_3.section_1.substation_name = OptionField("Substation", options=list_substations(), flex=50)
-    step_3.section_1.table = Table("### Load Growth Factor \n Add load to the selected substation", default=[])
-    step_3.section_1.table.customer_type = OptionField("Customer Group", options=['Household', 'Industrial', 'Commercial'])
-    step_3.section_1.table.lgf = IntegerField("Load Growth Factor (percentage)", description="Define how many customers of this type are connected.")
+    step_3.section_1.table = DynamicArray("### Load Growth Factor \n Add load to the selected substation")
+    step_3.section_1.table.customer_type = OptionField("Customer Group", options=['Household', 'Industrial', 'Commercial'], flex=50)
+    step_3.section_1.table.lgf = IntegerField("Load Growth Factor (percentage)", description="Define how many customers of this type are connected.", flex=50)
 
     # step_3.section_1.connect_button = SetParamsButton('Connect', flex=100, method='connect_load')
 
@@ -163,6 +164,7 @@ class Parametrization(ViktorParametrization):
     step_3.section_3.array = DynamicArray("EV Charging Stations")
     step_3.section_3.array.type = OptionField("#### Type", options=['Slow (7 KW)', 'Fast (22 KW)', 'Ultra Fast (70 KW)'], flex=50)
     step_3.section_3.array.number = IntegerField("#### Number", flex=50 )
+    
     # step_4 = Step("Load Growth Factor", description="Create scenarios based on the growrates", views=["get_plotly_view_1"])
     # step_4.section_1 = Section("Load Growth Factor", description="Specify the Load Growth Factor per customer group for the substation")
     # step_4.section_1.select_substation = OptionField("Substation", options=list_substations(), flex=50)
@@ -222,6 +224,10 @@ class Controller(ViktorController):
     def remove_substation(self, params, **kwargs):
         name = params['step_1']['section_3']['substation_name']
         db.Substation.remove_substation(name)
+
+    def create_lines(self, params, **kwargs):
+        lines = db.create_lines()
+        return
 
     def add_load_profile(self, params, **kwargs):
         data = params['step_2']['section_1']['dynamic_array_1']
@@ -492,13 +498,15 @@ class Controller(ViktorController):
             features.append(substation)
         for AMI in data['AMIs']:
             features.append(AMI)
+        for line in data['lines']:
+            features.append(line)
+
+        print(line)
 
         geojson = {"type": "FeatureCollection",
                    "features": features}
         
         return GeoJSONResult(geojson)
-
-        return MapResult(features)
     
     @PlotlyView('Aggregated Load Profile', duration_guess=10)
     def get_plotly_view_2(self, params, **kwargs):
@@ -543,7 +551,7 @@ class Controller(ViktorController):
         # Customize layout
         fig.update_layout(
             barmode='stack',
-            title=f'Aggregated Load Profile for Substation {substation_name}',
+            title=f'Aggregated Load Profile for {substation_name}',
             xaxis_title='Time',
             yaxis_title='Load (kW)',
             legend_title='Customer Type'
