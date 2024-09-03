@@ -636,7 +636,7 @@ class Controller(ViktorController):
         
         return PlotlyResult(fig)
     
-    @GeoJSONView('Energy Landscape Overview', duration_guess=10)
+    @GeoJSONView('Energy Landscape Overview', duration_guess=2)
     def get_map_view_1(self, params, **kwargs):
 
         data = db.open_database()
@@ -717,8 +717,6 @@ class Controller(ViktorController):
         fig = fig.to_json()
 
         return PlotlyResult(fig)
-
-
 
 
     @DataView("Assumptions Overview", duration_guess=10)
