@@ -1,1 +1,2206 @@
-{"substations": [{"type": "Feature", "geometry": {"type": "Point", "coordinates": [-60.9946276508165, 14.009845148620492]}, "properties": {"name": "Castries Substation", "loads": [{"name": "Playa", "num_connections": 1, "profile": {"time_array": [{"value": 45.0, "time": "00:00"}, {"value": 45.0, "time": "00:15"}, {"value": 40.0, "time": "00:30"}, {"value": 40.0, "time": "00:45"}, {"value": 40.0, "time": "01:00"}, {"value": 40.0, "time": "01:15"}, {"value": 35.0, "time": "01:30"}, {"value": 35.0, "time": "01:45"}, {"value": 35.0, "time": "02:00"}, {"value": 35.0, "time": "02:15"}, {"value": 35.0, "time": "02:30"}, {"value": 35.0, "time": "02:45"}, {"value": 35.0, "time": "03:00"}, {"value": 35.0, "time": "03:15"}, {"value": 35.0, "time": "03:30"}, {"value": 35.0, "time": "03:45"}, {"value": 35.0, "time": "04:00"}, {"value": 35.0, "time": "04:15"}, {"value": 35.0, "time": "04:30"}, {"value": 30.0, "time": "04:45"}, {"value": 30.0, "time": "05:00"}, {"value": 30.0, "time": "05:15"}, {"value": 30.0, "time": "05:30"}, {"value": 25.0, "time": "05:45"}, {"value": 25.0, "time": "06:00"}, {"value": 25.0, "time": "06:15"}, {"value": 25.0, "time": "06:30"}, {"value": 25.0, "time": "06:45"}, {"value": 25.0, "time": "07:00"}, {"value": 15.0, "time": "07:15"}, {"value": 15.0, "time": "07:30"}, {"value": 15.0, "time": "07:45"}, {"value": 15.0, "time": "08:00"}, {"value": 15.0, "time": "08:15"}, {"value": 15.0, "time": "08:30"}, {"value": 15.0, "time": "08:45"}, {"value": 15.0, "time": "09:00"}, {"value": 15.0, "time": "09:15"}, {"value": 15.0, "time": "09:30"}, {"value": 15.0, "time": "09:45"}, {"value": 15.0, "time": "10:00"}, {"value": 15.0, "time": "10:15"}, {"value": 15.0, "time": "10:30"}, {"value": 15.0, "time": "10:45"}, {"value": 15.0, "time": "11:00"}, {"value": 15.0, "time": "11:15"}, {"value": 12.5, "time": "11:30"}, {"value": 12.5, "time": "11:45"}, {"value": 12.5, "time": "12:00"}, {"value": 12.5, "time": "12:15"}, {"value": 12.5, "time": "12:30"}, {"value": 15.0, "time": "12:45"}, {"value": 15.0, "time": "13:00"}, {"value": 15.0, "time": "13:15"}, {"value": 15.0, "time": "13:30"}, {"value": 22.5, "time": "13:45"}, {"value": 22.5, "time": "14:00"}, {"value": 22.5, "time": "14:15"}, {"value": 22.5, "time": "14:30"}, {"value": 22.5, "time": "14:45"}, {"value": 22.5, "time": "15:00"}, {"value": 22.5, "time": "15:15"}, {"value": 22.5, "time": "15:30"}, {"value": 22.5, "time": "15:45"}, {"value": 22.5, "time": "16:00"}, {"value": 22.5, "time": "16:15"}, {"value": 22.5, "time": "16:30"}, {"value": 22.5, "time": "16:45"}, {"value": 22.5, "time": "17:00"}, {"value": 22.5, "time": "17:15"}, {"value": 30.0, "time": "17:30"}, {"value": 30.0, "time": "17:45"}, {"value": 30.0, "time": "18:00"}, {"value": 30.0, "time": "18:15"}, {"value": 30.0, "time": "18:30"}, {"value": 30.0, "time": "18:45"}, {"value": 30.0, "time": "19:00"}, {"value": 30.0, "time": "19:15"}, {"value": 30.0, "time": "19:30"}, {"value": 30.0, "time": "19:45"}, {"value": 30.0, "time": "20:00"}, {"value": 30.0, "time": "20:15"}, {"value": 30.0, "time": "20:30"}, {"value": 50, "time": "20:45"}, {"value": 50, "time": "21:00"}, {"value": 50, "time": "21:15"}, {"value": 50, "time": "21:30"}, {"value": 50, "time": "21:45"}, {"value": 50, "time": "22:00"}, {"value": 50, "time": "22:15"}, {"value": 50, "time": "22:30"}, {"value": 50, "time": "22:45"}, {"value": 50, "time": "23:00"}, {"value": 50, "time": "23:15"}, {"value": 50, "time": "23:30"}, {"value": 50, "time": "23:45"}]}}, {"name": "EV - Daily Charge - 7 PM - AC", "num_connections": 10, "profile": {"time_array": [{"value": 0, "time": "00:00"}, {"value": 0, "time": "00:15"}, {"value": 0, "time": "00:30"}, {"value": 0, "time": "00:45"}, {"value": 0, "time": "01:00"}, {"value": 0, "time": "01:15"}, {"value": 0, "time": "01:30"}, {"value": 0, "time": "01:45"}, {"value": 0, "time": "02:00"}, {"value": 0, "time": "02:15"}, {"value": 0, "time": "02:30"}, {"value": 0, "time": "02:45"}, {"value": 0, "time": "03:00"}, {"value": 0, "time": "03:15"}, {"value": 0, "time": "03:30"}, {"value": 0, "time": "03:45"}, {"value": 0, "time": "04:00"}, {"value": 0, "time": "04:15"}, {"value": 0, "time": "04:30"}, {"value": 0, "time": "04:45"}, {"value": 0, "time": "05:00"}, {"value": 0, "time": "05:15"}, {"value": 0, "time": "05:30"}, {"value": 0, "time": "05:45"}, {"value": 0, "time": "06:00"}, {"value": 0, "time": "06:15"}, {"value": 0, "time": "06:30"}, {"value": 0, "time": "06:45"}, {"value": 0, "time": "07:00"}, {"value": 0, "time": "07:15"}, {"value": 0, "time": "07:30"}, {"value": 0, "time": "07:45"}, {"value": 0, "time": "08:00"}, {"value": 0, "time": "08:15"}, {"value": 0, "time": "08:30"}, {"value": 0, "time": "08:45"}, {"value": 0, "time": "09:00"}, {"value": 0, "time": "09:15"}, {"value": 0, "time": "09:30"}, {"value": 0, "time": "09:45"}, {"value": 0, "time": "10:00"}, {"value": 0, "time": "10:15"}, {"value": 0, "time": "10:30"}, {"value": 0, "time": "10:45"}, {"value": 0, "time": "11:00"}, {"value": 0, "time": "11:15"}, {"value": 0, "time": "11:30"}, {"value": 0, "time": "11:45"}, {"value": 0, "time": "12:00"}, {"value": 0, "time": "12:15"}, {"value": 0, "time": "12:30"}, {"value": 0, "time": "12:45"}, {"value": 0, "time": "13:00"}, {"value": 0, "time": "13:15"}, {"value": 0, "time": "13:30"}, {"value": 0, "time": "13:45"}, {"value": 0, "time": "14:00"}, {"value": 0, "time": "14:15"}, {"value": 0, "time": "14:30"}, {"value": 0, "time": "14:45"}, {"value": 0, "time": "15:00"}, {"value": 0, "time": "15:15"}, {"value": 0, "time": "15:30"}, {"value": 0, "time": "15:45"}, {"value": 0, "time": "16:00"}, {"value": 0, "time": "16:15"}, {"value": 0, "time": "16:30"}, {"value": 0, "time": "16:45"}, {"value": 0, "time": "17:00"}, {"value": 0, "time": "17:15"}, {"value": 0, "time": "17:30"}, {"value": 3.5, "time": "17:45"}, {"value": 7, "time": "18:00"}, {"value": 7, "time": "18:15"}, {"value": 7, "time": "18:30"}, {"value": 7, "time": "18:45"}, {"value": 3.5, "time": "19:00"}, {"value": 0, "time": "19:15"}, {"value": 0, "time": "19:30"}, {"value": 0, "time": "19:45"}, {"value": 0, "time": "20:00"}, {"value": 0, "time": "20:15"}, {"value": 0, "time": "20:30"}, {"value": 0, "time": "20:45"}, {"value": 0, "time": "21:00"}, {"value": 0, "time": "21:15"}, {"value": 0, "time": "21:30"}, {"value": 0, "time": "21:45"}, {"value": 0, "time": "22:00"}, {"value": 0, "time": "22:15"}, {"value": 0, "time": "22:30"}, {"value": 0, "time": "22:45"}, {"value": 0, "time": "23:00"}, {"value": 0, "time": "23:15"}, {"value": 0, "time": "23:30"}, {"value": 0, "time": "23:45"}]}}]}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-60.98907768517981, 14.019087728544887]}, "properties": {"name": "Castries Substation 2", "loads": [{"name": "Shops", "num_connections": 20, "profile": {"time_array": [{"value": 60.0, "time": "00:00"}, {"value": 45.0, "time": "00:15"}, {"value": 30.0, "time": "00:30"}, {"value": 33.0, "time": "00:45"}, {"value": 36.0, "time": "01:00"}, {"value": 30.0, "time": "01:15"}, {"value": 33.0, "time": "01:30"}, {"value": 36.0, "time": "01:45"}, {"value": 36.0, "time": "02:00"}, {"value": 30.0, "time": "02:15"}, {"value": 33.0, "time": "02:30"}, {"value": 30.0, "time": "02:45"}, {"value": 30.0, "time": "03:00"}, {"value": 30.0, "time": "03:15"}, {"value": 24.0, "time": "03:30"}, {"value": 36.0, "time": "03:45"}, {"value": 45.0, "time": "04:00"}, {"value": 60.0, "time": "04:15"}, {"value": 63.0, "time": "04:30"}, {"value": 72.0, "time": "04:45"}, {"value": 78.0, "time": "05:00"}, {"value": 84.00000000000001, "time": "05:15"}, {"value": 90.0, "time": "05:30"}, {"value": 105.0, "time": "05:45"}, {"value": 120.0, "time": "06:00"}, {"value": 150.0, "time": "06:15"}, {"value": 180.0, "time": "06:30"}, {"value": 195.0, "time": "06:45"}, {"value": 210.0, "time": "07:00"}, {"value": 225.0, "time": "07:15"}, {"value": 240.0, "time": "07:30"}, {"value": 255.0, "time": "07:45"}, {"value": 240.0, "time": "08:00"}, {"value": 240.0, "time": "08:15"}, {"value": 255.0, "time": "08:30"}, {"value": 255.0, "time": "08:45"}, {"value": 270.0, "time": "09:00"}, {"value": 255.0, "time": "09:15"}, {"value": 262.5, "time": "09:30"}, {"value": 262.5, "time": "09:45"}, {"value": 255.0, "time": "10:00"}, {"value": 262.5, "time": "10:15"}, {"value": 245.99999999999997, "time": "10:30"}, {"value": 243.00000000000003, "time": "10:45"}, {"value": 259.5, "time": "11:00"}, {"value": 262.5, "time": "11:15"}, {"value": 259.5, "time": "11:30"}, {"value": 259.5, "time": "11:45"}, {"value": 279.0, "time": "12:00"}, {"value": 273.0, "time": "12:15"}, {"value": 270.0, "time": "12:30"}, {"value": 264.0, "time": "12:45"}, {"value": 261.0, "time": "13:00"}, {"value": 270.0, "time": "13:15"}, {"value": 264.0, "time": "13:30"}, {"value": 249.0, "time": "13:45"}, {"value": 255.0, "time": "14:00"}, {"value": 252.0, "time": "14:15"}, {"value": 249.0, "time": "14:30"}, {"value": 245.99999999999997, "time": "14:45"}, {"value": 249.0, "time": "15:00"}, {"value": 255.0, "time": "15:15"}, {"value": 258.0, "time": "15:30"}, {"value": 261.0, "time": "15:45"}, {"value": 255.0, "time": "16:00"}, {"value": 270.0, "time": "16:15"}, {"value": 255.0, "time": "16:30"}, {"value": 255.0, "time": "16:45"}, {"value": 252.0, "time": "17:00"}, {"value": 255.0, "time": "17:15"}, {"value": 245.99999999999997, "time": "17:30"}, {"value": 243.00000000000003, "time": "17:45"}, {"value": 240.0, "time": "18:00"}, {"value": 234.0, "time": "18:15"}, {"value": 225.0, "time": "18:30"}, {"value": 225.0, "time": "18:45"}, {"value": 225.0, "time": "19:00"}, {"value": 225.0, "time": "19:15"}, {"value": 231.0, "time": "19:30"}, {"value": 210.0, "time": "19:45"}, {"value": 204.00000000000003, "time": "20:00"}, {"value": 195.0, "time": "20:15"}, {"value": 219.0, "time": "20:30"}, {"value": 210.0, "time": "20:45"}, {"value": 210.0, "time": "21:00"}, {"value": 195.0, "time": "21:15"}, {"value": 180.0, "time": "21:30"}, {"value": 165.0, "time": "21:45"}, {"value": 150.0, "time": "22:00"}, {"value": 135.0, "time": "22:15"}, {"value": 120.0, "time": "22:30"}, {"value": 105.0, "time": "22:45"}, {"value": 90.0, "time": "23:00"}, {"value": 75.0, "time": "23:15"}, {"value": 60.0, "time": "23:30"}, {"value": 60.0, "time": "23:45"}]}}, {"name": "Shops", "num_connections": 20, "profile": {"time_array": [{"value": 60.0, "time": "00:00"}, {"value": 45.0, "time": "00:15"}, {"value": 30.0, "time": "00:30"}, {"value": 33.0, "time": "00:45"}, {"value": 36.0, "time": "01:00"}, {"value": 30.0, "time": "01:15"}, {"value": 33.0, "time": "01:30"}, {"value": 36.0, "time": "01:45"}, {"value": 36.0, "time": "02:00"}, {"value": 30.0, "time": "02:15"}, {"value": 33.0, "time": "02:30"}, {"value": 30.0, "time": "02:45"}, {"value": 30.0, "time": "03:00"}, {"value": 30.0, "time": "03:15"}, {"value": 24.0, "time": "03:30"}, {"value": 36.0, "time": "03:45"}, {"value": 45.0, "time": "04:00"}, {"value": 60.0, "time": "04:15"}, {"value": 63.0, "time": "04:30"}, {"value": 72.0, "time": "04:45"}, {"value": 78.0, "time": "05:00"}, {"value": 84.00000000000001, "time": "05:15"}, {"value": 90.0, "time": "05:30"}, {"value": 105.0, "time": "05:45"}, {"value": 120.0, "time": "06:00"}, {"value": 150.0, "time": "06:15"}, {"value": 180.0, "time": "06:30"}, {"value": 195.0, "time": "06:45"}, {"value": 210.0, "time": "07:00"}, {"value": 225.0, "time": "07:15"}, {"value": 240.0, "time": "07:30"}, {"value": 255.0, "time": "07:45"}, {"value": 240.0, "time": "08:00"}, {"value": 240.0, "time": "08:15"}, {"value": 255.0, "time": "08:30"}, {"value": 255.0, "time": "08:45"}, {"value": 270.0, "time": "09:00"}, {"value": 255.0, "time": "09:15"}, {"value": 262.5, "time": "09:30"}, {"value": 262.5, "time": "09:45"}, {"value": 255.0, "time": "10:00"}, {"value": 262.5, "time": "10:15"}, {"value": 245.99999999999997, "time": "10:30"}, {"value": 243.00000000000003, "time": "10:45"}, {"value": 259.5, "time": "11:00"}, {"value": 262.5, "time": "11:15"}, {"value": 259.5, "time": "11:30"}, {"value": 259.5, "time": "11:45"}, {"value": 279.0, "time": "12:00"}, {"value": 273.0, "time": "12:15"}, {"value": 270.0, "time": "12:30"}, {"value": 264.0, "time": "12:45"}, {"value": 261.0, "time": "13:00"}, {"value": 270.0, "time": "13:15"}, {"value": 264.0, "time": "13:30"}, {"value": 249.0, "time": "13:45"}, {"value": 255.0, "time": "14:00"}, {"value": 252.0, "time": "14:15"}, {"value": 249.0, "time": "14:30"}, {"value": 245.99999999999997, "time": "14:45"}, {"value": 249.0, "time": "15:00"}, {"value": 255.0, "time": "15:15"}, {"value": 258.0, "time": "15:30"}, {"value": 261.0, "time": "15:45"}, {"value": 255.0, "time": "16:00"}, {"value": 270.0, "time": "16:15"}, {"value": 255.0, "time": "16:30"}, {"value": 255.0, "time": "16:45"}, {"value": 252.0, "time": "17:00"}, {"value": 255.0, "time": "17:15"}, {"value": 245.99999999999997, "time": "17:30"}, {"value": 243.00000000000003, "time": "17:45"}, {"value": 240.0, "time": "18:00"}, {"value": 234.0, "time": "18:15"}, {"value": 225.0, "time": "18:30"}, {"value": 225.0, "time": "18:45"}, {"value": 225.0, "time": "19:00"}, {"value": 225.0, "time": "19:15"}, {"value": 231.0, "time": "19:30"}, {"value": 210.0, "time": "19:45"}, {"value": 204.00000000000003, "time": "20:00"}, {"value": 195.0, "time": "20:15"}, {"value": 219.0, "time": "20:30"}, {"value": 210.0, "time": "20:45"}, {"value": 210.0, "time": "21:00"}, {"value": 195.0, "time": "21:15"}, {"value": 180.0, "time": "21:30"}, {"value": 165.0, "time": "21:45"}, {"value": 150.0, "time": "22:00"}, {"value": 135.0, "time": "22:15"}, {"value": 120.0, "time": "22:30"}, {"value": 105.0, "time": "22:45"}, {"value": 90.0, "time": "23:00"}, {"value": 75.0, "time": "23:15"}, {"value": 60.0, "time": "23:30"}, {"value": 60.0, "time": "23:45"}]}}, {"name": "Shops", "num_connections": 20, "profile": {"time_array": [{"value": 60.0, "time": "00:00"}, {"value": 45.0, "time": "00:15"}, {"value": 30.0, "time": "00:30"}, {"value": 33.0, "time": "00:45"}, {"value": 36.0, "time": "01:00"}, {"value": 30.0, "time": "01:15"}, {"value": 33.0, "time": "01:30"}, {"value": 36.0, "time": "01:45"}, {"value": 36.0, "time": "02:00"}, {"value": 30.0, "time": "02:15"}, {"value": 33.0, "time": "02:30"}, {"value": 30.0, "time": "02:45"}, {"value": 30.0, "time": "03:00"}, {"value": 30.0, "time": "03:15"}, {"value": 24.0, "time": "03:30"}, {"value": 36.0, "time": "03:45"}, {"value": 45.0, "time": "04:00"}, {"value": 60.0, "time": "04:15"}, {"value": 63.0, "time": "04:30"}, {"value": 72.0, "time": "04:45"}, {"value": 78.0, "time": "05:00"}, {"value": 84.00000000000001, "time": "05:15"}, {"value": 90.0, "time": "05:30"}, {"value": 105.0, "time": "05:45"}, {"value": 120.0, "time": "06:00"}, {"value": 150.0, "time": "06:15"}, {"value": 180.0, "time": "06:30"}, {"value": 195.0, "time": "06:45"}, {"value": 210.0, "time": "07:00"}, {"value": 225.0, "time": "07:15"}, {"value": 240.0, "time": "07:30"}, {"value": 255.0, "time": "07:45"}, {"value": 240.0, "time": "08:00"}, {"value": 240.0, "time": "08:15"}, {"value": 255.0, "time": "08:30"}, {"value": 255.0, "time": "08:45"}, {"value": 270.0, "time": "09:00"}, {"value": 255.0, "time": "09:15"}, {"value": 262.5, "time": "09:30"}, {"value": 262.5, "time": "09:45"}, {"value": 255.0, "time": "10:00"}, {"value": 262.5, "time": "10:15"}, {"value": 245.99999999999997, "time": "10:30"}, {"value": 243.00000000000003, "time": "10:45"}, {"value": 259.5, "time": "11:00"}, {"value": 262.5, "time": "11:15"}, {"value": 259.5, "time": "11:30"}, {"value": 259.5, "time": "11:45"}, {"value": 279.0, "time": "12:00"}, {"value": 273.0, "time": "12:15"}, {"value": 270.0, "time": "12:30"}, {"value": 264.0, "time": "12:45"}, {"value": 261.0, "time": "13:00"}, {"value": 270.0, "time": "13:15"}, {"value": 264.0, "time": "13:30"}, {"value": 249.0, "time": "13:45"}, {"value": 255.0, "time": "14:00"}, {"value": 252.0, "time": "14:15"}, {"value": 249.0, "time": "14:30"}, {"value": 245.99999999999997, "time": "14:45"}, {"value": 249.0, "time": "15:00"}, {"value": 255.0, "time": "15:15"}, {"value": 258.0, "time": "15:30"}, {"value": 261.0, "time": "15:45"}, {"value": 255.0, "time": "16:00"}, {"value": 270.0, "time": "16:15"}, {"value": 255.0, "time": "16:30"}, {"value": 255.0, "time": "16:45"}, {"value": 252.0, "time": "17:00"}, {"value": 255.0, "time": "17:15"}, {"value": 245.99999999999997, "time": "17:30"}, {"value": 243.00000000000003, "time": "17:45"}, {"value": 240.0, "time": "18:00"}, {"value": 234.0, "time": "18:15"}, {"value": 225.0, "time": "18:30"}, {"value": 225.0, "time": "18:45"}, {"value": 225.0, "time": "19:00"}, {"value": 225.0, "time": "19:15"}, {"value": 231.0, "time": "19:30"}, {"value": 210.0, "time": "19:45"}, {"value": 204.00000000000003, "time": "20:00"}, {"value": 195.0, "time": "20:15"}, {"value": 219.0, "time": "20:30"}, {"value": 210.0, "time": "20:45"}, {"value": 210.0, "time": "21:00"}, {"value": 195.0, "time": "21:15"}, {"value": 180.0, "time": "21:30"}, {"value": 165.0, "time": "21:45"}, {"value": 150.0, "time": "22:00"}, {"value": 135.0, "time": "22:15"}, {"value": 120.0, "time": "22:30"}, {"value": 105.0, "time": "22:45"}, {"value": 90.0, "time": "23:00"}, {"value": 75.0, "time": "23:15"}, {"value": 60.0, "time": "23:30"}, {"value": 60.0, "time": "23:45"}]}}, {"name": "Shops", "num_connections": 20, "profile": {"time_array": [{"value": 60.0, "time": "00:00"}, {"value": 45.0, "time": "00:15"}, {"value": 30.0, "time": "00:30"}, {"value": 33.0, "time": "00:45"}, {"value": 36.0, "time": "01:00"}, {"value": 30.0, "time": "01:15"}, {"value": 33.0, "time": "01:30"}, {"value": 36.0, "time": "01:45"}, {"value": 36.0, "time": "02:00"}, {"value": 30.0, "time": "02:15"}, {"value": 33.0, "time": "02:30"}, {"value": 30.0, "time": "02:45"}, {"value": 30.0, "time": "03:00"}, {"value": 30.0, "time": "03:15"}, {"value": 24.0, "time": "03:30"}, {"value": 36.0, "time": "03:45"}, {"value": 45.0, "time": "04:00"}, {"value": 60.0, "time": "04:15"}, {"value": 63.0, "time": "04:30"}, {"value": 72.0, "time": "04:45"}, {"value": 78.0, "time": "05:00"}, {"value": 84.00000000000001, "time": "05:15"}, {"value": 90.0, "time": "05:30"}, {"value": 105.0, "time": "05:45"}, {"value": 120.0, "time": "06:00"}, {"value": 150.0, "time": "06:15"}, {"value": 180.0, "time": "06:30"}, {"value": 195.0, "time": "06:45"}, {"value": 210.0, "time": "07:00"}, {"value": 225.0, "time": "07:15"}, {"value": 240.0, "time": "07:30"}, {"value": 255.0, "time": "07:45"}, {"value": 240.0, "time": "08:00"}, {"value": 240.0, "time": "08:15"}, {"value": 255.0, "time": "08:30"}, {"value": 255.0, "time": "08:45"}, {"value": 270.0, "time": "09:00"}, {"value": 255.0, "time": "09:15"}, {"value": 262.5, "time": "09:30"}, {"value": 262.5, "time": "09:45"}, {"value": 255.0, "time": "10:00"}, {"value": 262.5, "time": "10:15"}, {"value": 245.99999999999997, "time": "10:30"}, {"value": 243.00000000000003, "time": "10:45"}, {"value": 259.5, "time": "11:00"}, {"value": 262.5, "time": "11:15"}, {"value": 259.5, "time": "11:30"}, {"value": 259.5, "time": "11:45"}, {"value": 279.0, "time": "12:00"}, {"value": 273.0, "time": "12:15"}, {"value": 270.0, "time": "12:30"}, {"value": 264.0, "time": "12:45"}, {"value": 261.0, "time": "13:00"}, {"value": 270.0, "time": "13:15"}, {"value": 264.0, "time": "13:30"}, {"value": 249.0, "time": "13:45"}, {"value": 255.0, "time": "14:00"}, {"value": 252.0, "time": "14:15"}, {"value": 249.0, "time": "14:30"}, {"value": 245.99999999999997, "time": "14:45"}, {"value": 249.0, "time": "15:00"}, {"value": 255.0, "time": "15:15"}, {"value": 258.0, "time": "15:30"}, {"value": 261.0, "time": "15:45"}, {"value": 255.0, "time": "16:00"}, {"value": 270.0, "time": "16:15"}, {"value": 255.0, "time": "16:30"}, {"value": 255.0, "time": "16:45"}, {"value": 252.0, "time": "17:00"}, {"value": 255.0, "time": "17:15"}, {"value": 245.99999999999997, "time": "17:30"}, {"value": 243.00000000000003, "time": "17:45"}, {"value": 240.0, "time": "18:00"}, {"value": 234.0, "time": "18:15"}, {"value": 225.0, "time": "18:30"}, {"value": 225.0, "time": "18:45"}, {"value": 225.0, "time": "19:00"}, {"value": 225.0, "time": "19:15"}, {"value": 231.0, "time": "19:30"}, {"value": 210.0, "time": "19:45"}, {"value": 204.00000000000003, "time": "20:00"}, {"value": 195.0, "time": "20:15"}, {"value": 219.0, "time": "20:30"}, {"value": 210.0, "time": "20:45"}, {"value": 210.0, "time": "21:00"}, {"value": 195.0, "time": "21:15"}, {"value": 180.0, "time": "21:30"}, {"value": 165.0, "time": "21:45"}, {"value": 150.0, "time": "22:00"}, {"value": 135.0, "time": "22:15"}, {"value": 120.0, "time": "22:30"}, {"value": 105.0, "time": "22:45"}, {"value": 90.0, "time": "23:00"}, {"value": 75.0, "time": "23:15"}, {"value": 60.0, "time": "23:30"}, {"value": 60.0, "time": "23:45"}]}}, {"name": "Shops", "num_connections": 20, "profile": {"time_array": [{"value": 60.0, "time": "00:00"}, {"value": 45.0, "time": "00:15"}, {"value": 30.0, "time": "00:30"}, {"value": 33.0, "time": "00:45"}, {"value": 36.0, "time": "01:00"}, {"value": 30.0, "time": "01:15"}, {"value": 33.0, "time": "01:30"}, {"value": 36.0, "time": "01:45"}, {"value": 36.0, "time": "02:00"}, {"value": 30.0, "time": "02:15"}, {"value": 33.0, "time": "02:30"}, {"value": 30.0, "time": "02:45"}, {"value": 30.0, "time": "03:00"}, {"value": 30.0, "time": "03:15"}, {"value": 24.0, "time": "03:30"}, {"value": 36.0, "time": "03:45"}, {"value": 45.0, "time": "04:00"}, {"value": 60.0, "time": "04:15"}, {"value": 63.0, "time": "04:30"}, {"value": 72.0, "time": "04:45"}, {"value": 78.0, "time": "05:00"}, {"value": 84.00000000000001, "time": "05:15"}, {"value": 90.0, "time": "05:30"}, {"value": 105.0, "time": "05:45"}, {"value": 120.0, "time": "06:00"}, {"value": 150.0, "time": "06:15"}, {"value": 180.0, "time": "06:30"}, {"value": 195.0, "time": "06:45"}, {"value": 210.0, "time": "07:00"}, {"value": 225.0, "time": "07:15"}, {"value": 240.0, "time": "07:30"}, {"value": 255.0, "time": "07:45"}, {"value": 240.0, "time": "08:00"}, {"value": 240.0, "time": "08:15"}, {"value": 255.0, "time": "08:30"}, {"value": 255.0, "time": "08:45"}, {"value": 270.0, "time": "09:00"}, {"value": 255.0, "time": "09:15"}, {"value": 262.5, "time": "09:30"}, {"value": 262.5, "time": "09:45"}, {"value": 255.0, "time": "10:00"}, {"value": 262.5, "time": "10:15"}, {"value": 245.99999999999997, "time": "10:30"}, {"value": 243.00000000000003, "time": "10:45"}, {"value": 259.5, "time": "11:00"}, {"value": 262.5, "time": "11:15"}, {"value": 259.5, "time": "11:30"}, {"value": 259.5, "time": "11:45"}, {"value": 279.0, "time": "12:00"}, {"value": 273.0, "time": "12:15"}, {"value": 270.0, "time": "12:30"}, {"value": 264.0, "time": "12:45"}, {"value": 261.0, "time": "13:00"}, {"value": 270.0, "time": "13:15"}, {"value": 264.0, "time": "13:30"}, {"value": 249.0, "time": "13:45"}, {"value": 255.0, "time": "14:00"}, {"value": 252.0, "time": "14:15"}, {"value": 249.0, "time": "14:30"}, {"value": 245.99999999999997, "time": "14:45"}, {"value": 249.0, "time": "15:00"}, {"value": 255.0, "time": "15:15"}, {"value": 258.0, "time": "15:30"}, {"value": 261.0, "time": "15:45"}, {"value": 255.0, "time": "16:00"}, {"value": 270.0, "time": "16:15"}, {"value": 255.0, "time": "16:30"}, {"value": 255.0, "time": "16:45"}, {"value": 252.0, "time": "17:00"}, {"value": 255.0, "time": "17:15"}, {"value": 245.99999999999997, "time": "17:30"}, {"value": 243.00000000000003, "time": "17:45"}, {"value": 240.0, "time": "18:00"}, {"value": 234.0, "time": "18:15"}, {"value": 225.0, "time": "18:30"}, {"value": 225.0, "time": "18:45"}, {"value": 225.0, "time": "19:00"}, {"value": 225.0, "time": "19:15"}, {"value": 231.0, "time": "19:30"}, {"value": 210.0, "time": "19:45"}, {"value": 204.00000000000003, "time": "20:00"}, {"value": 195.0, "time": "20:15"}, {"value": 219.0, "time": "20:30"}, {"value": 210.0, "time": "20:45"}, {"value": 210.0, "time": "21:00"}, {"value": 195.0, "time": "21:15"}, {"value": 180.0, "time": "21:30"}, {"value": 165.0, "time": "21:45"}, {"value": 150.0, "time": "22:00"}, {"value": 135.0, "time": "22:15"}, {"value": 120.0, "time": "22:30"}, {"value": 105.0, "time": "22:45"}, {"value": 90.0, "time": "23:00"}, {"value": 75.0, "time": "23:15"}, {"value": 60.0, "time": "23:30"}, {"value": 60.0, "time": "23:45"}]}}]}}], "profiles": [{"name": "Customer - Heavy connection", "peak_load": 21, "base_profile": "Household"}, {"name": "Industrial", "peak_load": 100, "base_profile": "Industrial"}, {"name": "Shops", "peak_load": 300, "base_profile": "Commercial"}, {"name": "Households - Big", "peak_load": 600, "base_profile": "Household"}, {"name": "Huishouden", "peak_load": 1, "base_profile": "Household"}, {"name": "Playa", "peak_load": 50, "base_profile": "Standaardprofiel Wijk"}, {"name": "EV - Daily Charge - 7 PM - AC", "peak_load": 7, "base_profile": "EV - Daily Charge - 7 PM"}], "feeders": []}
+{
+    "substations": [
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -60.9920207940654,
+                    14.017779432960527
+                ]
+            },
+            "properties": {
+                "name": "Castries Substation",
+                "loads": [],
+                "title": "Castries Substation"
+            }
+        }
+    ],
+    "AMIs": [
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -60.99086212099295,
+                    14.019898839821186
+                ]
+            },
+            "properties": {
+                "AMI_id": "1231",
+                "customer_type": "Household",
+                "marker-color": "#ffff00",
+                "power_rating": 7.2,
+                "load": {
+                    "time_array": [
+                        {
+                            "value": 1.4400000000000002,
+                            "time": "00:00"
+                        },
+                        {
+                            "value": 1.08,
+                            "time": "00:15"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "00:30"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "00:45"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "01:00"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "01:15"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "01:30"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "01:45"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "02:00"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "02:15"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "02:30"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "02:45"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "03:00"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "03:15"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "03:30"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "03:45"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "04:00"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "04:15"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "04:30"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "04:45"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "05:00"
+                        },
+                        {
+                            "value": 1.08,
+                            "time": "05:15"
+                        },
+                        {
+                            "value": 1.4400000000000002,
+                            "time": "05:30"
+                        },
+                        {
+                            "value": 1.8,
+                            "time": "05:45"
+                        },
+                        {
+                            "value": 2.8800000000000003,
+                            "time": "06:00"
+                        },
+                        {
+                            "value": 3.6,
+                            "time": "06:15"
+                        },
+                        {
+                            "value": 4.32,
+                            "time": "06:30"
+                        },
+                        {
+                            "value": 4.680000000000001,
+                            "time": "06:45"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "07:00"
+                        },
+                        {
+                            "value": 5.4,
+                            "time": "07:15"
+                        },
+                        {
+                            "value": 5.760000000000001,
+                            "time": "07:30"
+                        },
+                        {
+                            "value": 6.12,
+                            "time": "07:45"
+                        },
+                        {
+                            "value": 5.760000000000001,
+                            "time": "08:00"
+                        },
+                        {
+                            "value": 5.4,
+                            "time": "08:15"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "08:30"
+                        },
+                        {
+                            "value": 4.680000000000001,
+                            "time": "08:45"
+                        },
+                        {
+                            "value": 4.32,
+                            "time": "09:00"
+                        },
+                        {
+                            "value": 3.9600000000000004,
+                            "time": "09:15"
+                        },
+                        {
+                            "value": 3.6,
+                            "time": "09:30"
+                        },
+                        {
+                            "value": 3.24,
+                            "time": "09:45"
+                        },
+                        {
+                            "value": 2.8800000000000003,
+                            "time": "10:00"
+                        },
+                        {
+                            "value": 2.52,
+                            "time": "10:15"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "10:30"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "10:45"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "11:00"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "11:15"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "11:30"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "11:45"
+                        },
+                        {
+                            "value": 2.52,
+                            "time": "12:00"
+                        },
+                        {
+                            "value": 2.8800000000000003,
+                            "time": "12:15"
+                        },
+                        {
+                            "value": 3.24,
+                            "time": "12:30"
+                        },
+                        {
+                            "value": 3.6,
+                            "time": "12:45"
+                        },
+                        {
+                            "value": 3.24,
+                            "time": "13:00"
+                        },
+                        {
+                            "value": 2.8800000000000003,
+                            "time": "13:15"
+                        },
+                        {
+                            "value": 2.52,
+                            "time": "13:30"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "13:45"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "14:00"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "14:15"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "14:30"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "14:45"
+                        },
+                        {
+                            "value": 2.52,
+                            "time": "15:00"
+                        },
+                        {
+                            "value": 2.8800000000000003,
+                            "time": "15:15"
+                        },
+                        {
+                            "value": 3.24,
+                            "time": "15:30"
+                        },
+                        {
+                            "value": 3.6,
+                            "time": "15:45"
+                        },
+                        {
+                            "value": 4.32,
+                            "time": "16:00"
+                        },
+                        {
+                            "value": 4.680000000000001,
+                            "time": "16:15"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "16:30"
+                        },
+                        {
+                            "value": 5.4,
+                            "time": "16:45"
+                        },
+                        {
+                            "value": 5.760000000000001,
+                            "time": "17:00"
+                        },
+                        {
+                            "value": 6.12,
+                            "time": "17:15"
+                        },
+                        {
+                            "value": 6.48,
+                            "time": "17:30"
+                        },
+                        {
+                            "value": 6.84,
+                            "time": "17:45"
+                        },
+                        {
+                            "value": 7.2,
+                            "time": "18:00"
+                        },
+                        {
+                            "value": 6.84,
+                            "time": "18:15"
+                        },
+                        {
+                            "value": 6.48,
+                            "time": "18:30"
+                        },
+                        {
+                            "value": 6.12,
+                            "time": "18:45"
+                        },
+                        {
+                            "value": 5.760000000000001,
+                            "time": "19:00"
+                        },
+                        {
+                            "value": 5.4,
+                            "time": "19:15"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "19:30"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "19:45"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "20:00"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "20:15"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "20:30"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "20:45"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "21:00"
+                        },
+                        {
+                            "value": 4.680000000000001,
+                            "time": "21:15"
+                        },
+                        {
+                            "value": 4.32,
+                            "time": "21:30"
+                        },
+                        {
+                            "value": 3.9600000000000004,
+                            "time": "21:45"
+                        },
+                        {
+                            "value": 3.6,
+                            "time": "22:00"
+                        },
+                        {
+                            "value": 3.24,
+                            "time": "22:15"
+                        },
+                        {
+                            "value": 2.8800000000000003,
+                            "time": "22:30"
+                        },
+                        {
+                            "value": 2.52,
+                            "time": "22:45"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "23:00"
+                        },
+                        {
+                            "value": 1.8,
+                            "time": "23:15"
+                        },
+                        {
+                            "value": 1.4400000000000002,
+                            "time": "23:30"
+                        },
+                        {
+                            "value": 1.4400000000000002,
+                            "time": "23:45"
+                        }
+                    ]
+                },
+                "substation": "Castries Substation",
+                "title": "ID: 1231",
+                "description": "Type: Household"
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -60.98965731817721,
+                    14.020230306171337
+                ]
+            },
+            "properties": {
+                "AMI_id": "1232",
+                "customer_type": "Household",
+                "marker-color": "#ffff00",
+                "power_rating": 7.2,
+                "load": {
+                    "time_array": [
+                        {
+                            "value": 1.4400000000000002,
+                            "time": "00:00"
+                        },
+                        {
+                            "value": 1.08,
+                            "time": "00:15"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "00:30"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "00:45"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "01:00"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "01:15"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "01:30"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "01:45"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "02:00"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "02:15"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "02:30"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "02:45"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "03:00"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "03:15"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "03:30"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "03:45"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "04:00"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "04:15"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "04:30"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "04:45"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "05:00"
+                        },
+                        {
+                            "value": 1.08,
+                            "time": "05:15"
+                        },
+                        {
+                            "value": 1.4400000000000002,
+                            "time": "05:30"
+                        },
+                        {
+                            "value": 1.8,
+                            "time": "05:45"
+                        },
+                        {
+                            "value": 2.8800000000000003,
+                            "time": "06:00"
+                        },
+                        {
+                            "value": 3.6,
+                            "time": "06:15"
+                        },
+                        {
+                            "value": 4.32,
+                            "time": "06:30"
+                        },
+                        {
+                            "value": 4.680000000000001,
+                            "time": "06:45"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "07:00"
+                        },
+                        {
+                            "value": 5.4,
+                            "time": "07:15"
+                        },
+                        {
+                            "value": 5.760000000000001,
+                            "time": "07:30"
+                        },
+                        {
+                            "value": 6.12,
+                            "time": "07:45"
+                        },
+                        {
+                            "value": 5.760000000000001,
+                            "time": "08:00"
+                        },
+                        {
+                            "value": 5.4,
+                            "time": "08:15"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "08:30"
+                        },
+                        {
+                            "value": 4.680000000000001,
+                            "time": "08:45"
+                        },
+                        {
+                            "value": 4.32,
+                            "time": "09:00"
+                        },
+                        {
+                            "value": 3.9600000000000004,
+                            "time": "09:15"
+                        },
+                        {
+                            "value": 3.6,
+                            "time": "09:30"
+                        },
+                        {
+                            "value": 3.24,
+                            "time": "09:45"
+                        },
+                        {
+                            "value": 2.8800000000000003,
+                            "time": "10:00"
+                        },
+                        {
+                            "value": 2.52,
+                            "time": "10:15"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "10:30"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "10:45"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "11:00"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "11:15"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "11:30"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "11:45"
+                        },
+                        {
+                            "value": 2.52,
+                            "time": "12:00"
+                        },
+                        {
+                            "value": 2.8800000000000003,
+                            "time": "12:15"
+                        },
+                        {
+                            "value": 3.24,
+                            "time": "12:30"
+                        },
+                        {
+                            "value": 3.6,
+                            "time": "12:45"
+                        },
+                        {
+                            "value": 3.24,
+                            "time": "13:00"
+                        },
+                        {
+                            "value": 2.8800000000000003,
+                            "time": "13:15"
+                        },
+                        {
+                            "value": 2.52,
+                            "time": "13:30"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "13:45"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "14:00"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "14:15"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "14:30"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "14:45"
+                        },
+                        {
+                            "value": 2.52,
+                            "time": "15:00"
+                        },
+                        {
+                            "value": 2.8800000000000003,
+                            "time": "15:15"
+                        },
+                        {
+                            "value": 3.24,
+                            "time": "15:30"
+                        },
+                        {
+                            "value": 3.6,
+                            "time": "15:45"
+                        },
+                        {
+                            "value": 4.32,
+                            "time": "16:00"
+                        },
+                        {
+                            "value": 4.680000000000001,
+                            "time": "16:15"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "16:30"
+                        },
+                        {
+                            "value": 5.4,
+                            "time": "16:45"
+                        },
+                        {
+                            "value": 5.760000000000001,
+                            "time": "17:00"
+                        },
+                        {
+                            "value": 6.12,
+                            "time": "17:15"
+                        },
+                        {
+                            "value": 6.48,
+                            "time": "17:30"
+                        },
+                        {
+                            "value": 6.84,
+                            "time": "17:45"
+                        },
+                        {
+                            "value": 7.2,
+                            "time": "18:00"
+                        },
+                        {
+                            "value": 6.84,
+                            "time": "18:15"
+                        },
+                        {
+                            "value": 6.48,
+                            "time": "18:30"
+                        },
+                        {
+                            "value": 6.12,
+                            "time": "18:45"
+                        },
+                        {
+                            "value": 5.760000000000001,
+                            "time": "19:00"
+                        },
+                        {
+                            "value": 5.4,
+                            "time": "19:15"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "19:30"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "19:45"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "20:00"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "20:15"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "20:30"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "20:45"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "21:00"
+                        },
+                        {
+                            "value": 4.680000000000001,
+                            "time": "21:15"
+                        },
+                        {
+                            "value": 4.32,
+                            "time": "21:30"
+                        },
+                        {
+                            "value": 3.9600000000000004,
+                            "time": "21:45"
+                        },
+                        {
+                            "value": 3.6,
+                            "time": "22:00"
+                        },
+                        {
+                            "value": 3.24,
+                            "time": "22:15"
+                        },
+                        {
+                            "value": 2.8800000000000003,
+                            "time": "22:30"
+                        },
+                        {
+                            "value": 2.52,
+                            "time": "22:45"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "23:00"
+                        },
+                        {
+                            "value": 1.8,
+                            "time": "23:15"
+                        },
+                        {
+                            "value": 1.4400000000000002,
+                            "time": "23:30"
+                        },
+                        {
+                            "value": 1.4400000000000002,
+                            "time": "23:45"
+                        }
+                    ]
+                },
+                "substation": "Castries Substation",
+                "title": "ID: 1232",
+                "description": "Type: Household"
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -60.98987003818484,
+                    14.019517640196426
+                ]
+            },
+            "properties": {
+                "AMI_id": "1233",
+                "customer_type": "Household",
+                "marker-color": "#ffff00",
+                "power_rating": 7.2,
+                "load": {
+                    "time_array": [
+                        {
+                            "value": 1.4400000000000002,
+                            "time": "00:00"
+                        },
+                        {
+                            "value": 1.08,
+                            "time": "00:15"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "00:30"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "00:45"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "01:00"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "01:15"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "01:30"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "01:45"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "02:00"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "02:15"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "02:30"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "02:45"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "03:00"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "03:15"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "03:30"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "03:45"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "04:00"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "04:15"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "04:30"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "04:45"
+                        },
+                        {
+                            "value": 0.7200000000000001,
+                            "time": "05:00"
+                        },
+                        {
+                            "value": 1.08,
+                            "time": "05:15"
+                        },
+                        {
+                            "value": 1.4400000000000002,
+                            "time": "05:30"
+                        },
+                        {
+                            "value": 1.8,
+                            "time": "05:45"
+                        },
+                        {
+                            "value": 2.8800000000000003,
+                            "time": "06:00"
+                        },
+                        {
+                            "value": 3.6,
+                            "time": "06:15"
+                        },
+                        {
+                            "value": 4.32,
+                            "time": "06:30"
+                        },
+                        {
+                            "value": 4.680000000000001,
+                            "time": "06:45"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "07:00"
+                        },
+                        {
+                            "value": 5.4,
+                            "time": "07:15"
+                        },
+                        {
+                            "value": 5.760000000000001,
+                            "time": "07:30"
+                        },
+                        {
+                            "value": 6.12,
+                            "time": "07:45"
+                        },
+                        {
+                            "value": 5.760000000000001,
+                            "time": "08:00"
+                        },
+                        {
+                            "value": 5.4,
+                            "time": "08:15"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "08:30"
+                        },
+                        {
+                            "value": 4.680000000000001,
+                            "time": "08:45"
+                        },
+                        {
+                            "value": 4.32,
+                            "time": "09:00"
+                        },
+                        {
+                            "value": 3.9600000000000004,
+                            "time": "09:15"
+                        },
+                        {
+                            "value": 3.6,
+                            "time": "09:30"
+                        },
+                        {
+                            "value": 3.24,
+                            "time": "09:45"
+                        },
+                        {
+                            "value": 2.8800000000000003,
+                            "time": "10:00"
+                        },
+                        {
+                            "value": 2.52,
+                            "time": "10:15"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "10:30"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "10:45"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "11:00"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "11:15"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "11:30"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "11:45"
+                        },
+                        {
+                            "value": 2.52,
+                            "time": "12:00"
+                        },
+                        {
+                            "value": 2.8800000000000003,
+                            "time": "12:15"
+                        },
+                        {
+                            "value": 3.24,
+                            "time": "12:30"
+                        },
+                        {
+                            "value": 3.6,
+                            "time": "12:45"
+                        },
+                        {
+                            "value": 3.24,
+                            "time": "13:00"
+                        },
+                        {
+                            "value": 2.8800000000000003,
+                            "time": "13:15"
+                        },
+                        {
+                            "value": 2.52,
+                            "time": "13:30"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "13:45"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "14:00"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "14:15"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "14:30"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "14:45"
+                        },
+                        {
+                            "value": 2.52,
+                            "time": "15:00"
+                        },
+                        {
+                            "value": 2.8800000000000003,
+                            "time": "15:15"
+                        },
+                        {
+                            "value": 3.24,
+                            "time": "15:30"
+                        },
+                        {
+                            "value": 3.6,
+                            "time": "15:45"
+                        },
+                        {
+                            "value": 4.32,
+                            "time": "16:00"
+                        },
+                        {
+                            "value": 4.680000000000001,
+                            "time": "16:15"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "16:30"
+                        },
+                        {
+                            "value": 5.4,
+                            "time": "16:45"
+                        },
+                        {
+                            "value": 5.760000000000001,
+                            "time": "17:00"
+                        },
+                        {
+                            "value": 6.12,
+                            "time": "17:15"
+                        },
+                        {
+                            "value": 6.48,
+                            "time": "17:30"
+                        },
+                        {
+                            "value": 6.84,
+                            "time": "17:45"
+                        },
+                        {
+                            "value": 7.2,
+                            "time": "18:00"
+                        },
+                        {
+                            "value": 6.84,
+                            "time": "18:15"
+                        },
+                        {
+                            "value": 6.48,
+                            "time": "18:30"
+                        },
+                        {
+                            "value": 6.12,
+                            "time": "18:45"
+                        },
+                        {
+                            "value": 5.760000000000001,
+                            "time": "19:00"
+                        },
+                        {
+                            "value": 5.4,
+                            "time": "19:15"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "19:30"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "19:45"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "20:00"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "20:15"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "20:30"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "20:45"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "21:00"
+                        },
+                        {
+                            "value": 4.680000000000001,
+                            "time": "21:15"
+                        },
+                        {
+                            "value": 4.32,
+                            "time": "21:30"
+                        },
+                        {
+                            "value": 3.9600000000000004,
+                            "time": "21:45"
+                        },
+                        {
+                            "value": 3.6,
+                            "time": "22:00"
+                        },
+                        {
+                            "value": 3.24,
+                            "time": "22:15"
+                        },
+                        {
+                            "value": 2.8800000000000003,
+                            "time": "22:30"
+                        },
+                        {
+                            "value": 2.52,
+                            "time": "22:45"
+                        },
+                        {
+                            "value": 2.16,
+                            "time": "23:00"
+                        },
+                        {
+                            "value": 1.8,
+                            "time": "23:15"
+                        },
+                        {
+                            "value": 1.4400000000000002,
+                            "time": "23:30"
+                        },
+                        {
+                            "value": 1.4400000000000002,
+                            "time": "23:45"
+                        }
+                    ]
+                },
+                "substation": "Castries Substation",
+                "title": "ID: 1233",
+                "description": "Type: Household"
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -60.99021213038546,
+                    14.018166253973964
+                ]
+            },
+            "properties": {
+                "AMI_id": "1234",
+                "customer_type": "Commercial",
+                "marker-color": "#0000ff",
+                "power_rating": 7.2,
+                "load": {
+                    "time_array": [
+                        {
+                            "value": 4.2,
+                            "time": "00:00"
+                        },
+                        {
+                            "value": 3.15,
+                            "time": "00:15"
+                        },
+                        {
+                            "value": 2.1,
+                            "time": "00:30"
+                        },
+                        {
+                            "value": 2.31,
+                            "time": "00:45"
+                        },
+                        {
+                            "value": 2.52,
+                            "time": "01:00"
+                        },
+                        {
+                            "value": 2.1,
+                            "time": "01:15"
+                        },
+                        {
+                            "value": 2.31,
+                            "time": "01:30"
+                        },
+                        {
+                            "value": 2.52,
+                            "time": "01:45"
+                        },
+                        {
+                            "value": 2.52,
+                            "time": "02:00"
+                        },
+                        {
+                            "value": 2.1,
+                            "time": "02:15"
+                        },
+                        {
+                            "value": 2.31,
+                            "time": "02:30"
+                        },
+                        {
+                            "value": 2.1,
+                            "time": "02:45"
+                        },
+                        {
+                            "value": 2.1,
+                            "time": "03:00"
+                        },
+                        {
+                            "value": 2.1,
+                            "time": "03:15"
+                        },
+                        {
+                            "value": 1.68,
+                            "time": "03:30"
+                        },
+                        {
+                            "value": 2.52,
+                            "time": "03:45"
+                        },
+                        {
+                            "value": 3.15,
+                            "time": "04:00"
+                        },
+                        {
+                            "value": 4.2,
+                            "time": "04:15"
+                        },
+                        {
+                            "value": 4.41,
+                            "time": "04:30"
+                        },
+                        {
+                            "value": 5.04,
+                            "time": "04:45"
+                        },
+                        {
+                            "value": 5.46,
+                            "time": "05:00"
+                        },
+                        {
+                            "value": 5.880000000000001,
+                            "time": "05:15"
+                        },
+                        {
+                            "value": 6.3,
+                            "time": "05:30"
+                        },
+                        {
+                            "value": 7.35,
+                            "time": "05:45"
+                        },
+                        {
+                            "value": 8.4,
+                            "time": "06:00"
+                        },
+                        {
+                            "value": 10.5,
+                            "time": "06:15"
+                        },
+                        {
+                            "value": 12.6,
+                            "time": "06:30"
+                        },
+                        {
+                            "value": 13.65,
+                            "time": "06:45"
+                        },
+                        {
+                            "value": 14.7,
+                            "time": "07:00"
+                        },
+                        {
+                            "value": 15.75,
+                            "time": "07:15"
+                        },
+                        {
+                            "value": 16.8,
+                            "time": "07:30"
+                        },
+                        {
+                            "value": 17.849999999999998,
+                            "time": "07:45"
+                        },
+                        {
+                            "value": 16.8,
+                            "time": "08:00"
+                        },
+                        {
+                            "value": 16.8,
+                            "time": "08:15"
+                        },
+                        {
+                            "value": 17.849999999999998,
+                            "time": "08:30"
+                        },
+                        {
+                            "value": 17.849999999999998,
+                            "time": "08:45"
+                        },
+                        {
+                            "value": 18.900000000000002,
+                            "time": "09:00"
+                        },
+                        {
+                            "value": 17.849999999999998,
+                            "time": "09:15"
+                        },
+                        {
+                            "value": 18.375,
+                            "time": "09:30"
+                        },
+                        {
+                            "value": 18.375,
+                            "time": "09:45"
+                        },
+                        {
+                            "value": 17.849999999999998,
+                            "time": "10:00"
+                        },
+                        {
+                            "value": 18.375,
+                            "time": "10:15"
+                        },
+                        {
+                            "value": 17.22,
+                            "time": "10:30"
+                        },
+                        {
+                            "value": 17.01,
+                            "time": "10:45"
+                        },
+                        {
+                            "value": 18.165,
+                            "time": "11:00"
+                        },
+                        {
+                            "value": 18.375,
+                            "time": "11:15"
+                        },
+                        {
+                            "value": 18.165,
+                            "time": "11:30"
+                        },
+                        {
+                            "value": 18.165,
+                            "time": "11:45"
+                        },
+                        {
+                            "value": 19.53,
+                            "time": "12:00"
+                        },
+                        {
+                            "value": 19.11,
+                            "time": "12:15"
+                        },
+                        {
+                            "value": 18.900000000000002,
+                            "time": "12:30"
+                        },
+                        {
+                            "value": 18.48,
+                            "time": "12:45"
+                        },
+                        {
+                            "value": 18.27,
+                            "time": "13:00"
+                        },
+                        {
+                            "value": 18.900000000000002,
+                            "time": "13:15"
+                        },
+                        {
+                            "value": 18.48,
+                            "time": "13:30"
+                        },
+                        {
+                            "value": 17.43,
+                            "time": "13:45"
+                        },
+                        {
+                            "value": 17.849999999999998,
+                            "time": "14:00"
+                        },
+                        {
+                            "value": 17.64,
+                            "time": "14:15"
+                        },
+                        {
+                            "value": 17.43,
+                            "time": "14:30"
+                        },
+                        {
+                            "value": 17.22,
+                            "time": "14:45"
+                        },
+                        {
+                            "value": 17.43,
+                            "time": "15:00"
+                        },
+                        {
+                            "value": 17.849999999999998,
+                            "time": "15:15"
+                        },
+                        {
+                            "value": 18.06,
+                            "time": "15:30"
+                        },
+                        {
+                            "value": 18.27,
+                            "time": "15:45"
+                        },
+                        {
+                            "value": 17.849999999999998,
+                            "time": "16:00"
+                        },
+                        {
+                            "value": 18.900000000000002,
+                            "time": "16:15"
+                        },
+                        {
+                            "value": 17.849999999999998,
+                            "time": "16:30"
+                        },
+                        {
+                            "value": 17.849999999999998,
+                            "time": "16:45"
+                        },
+                        {
+                            "value": 17.64,
+                            "time": "17:00"
+                        },
+                        {
+                            "value": 17.849999999999998,
+                            "time": "17:15"
+                        },
+                        {
+                            "value": 17.22,
+                            "time": "17:30"
+                        },
+                        {
+                            "value": 17.01,
+                            "time": "17:45"
+                        },
+                        {
+                            "value": 16.8,
+                            "time": "18:00"
+                        },
+                        {
+                            "value": 16.38,
+                            "time": "18:15"
+                        },
+                        {
+                            "value": 15.75,
+                            "time": "18:30"
+                        },
+                        {
+                            "value": 15.75,
+                            "time": "18:45"
+                        },
+                        {
+                            "value": 15.75,
+                            "time": "19:00"
+                        },
+                        {
+                            "value": 15.75,
+                            "time": "19:15"
+                        },
+                        {
+                            "value": 16.17,
+                            "time": "19:30"
+                        },
+                        {
+                            "value": 14.7,
+                            "time": "19:45"
+                        },
+                        {
+                            "value": 14.280000000000001,
+                            "time": "20:00"
+                        },
+                        {
+                            "value": 13.65,
+                            "time": "20:15"
+                        },
+                        {
+                            "value": 15.33,
+                            "time": "20:30"
+                        },
+                        {
+                            "value": 14.7,
+                            "time": "20:45"
+                        },
+                        {
+                            "value": 14.7,
+                            "time": "21:00"
+                        },
+                        {
+                            "value": 13.65,
+                            "time": "21:15"
+                        },
+                        {
+                            "value": 12.6,
+                            "time": "21:30"
+                        },
+                        {
+                            "value": 11.55,
+                            "time": "21:45"
+                        },
+                        {
+                            "value": 10.5,
+                            "time": "22:00"
+                        },
+                        {
+                            "value": 9.450000000000001,
+                            "time": "22:15"
+                        },
+                        {
+                            "value": 8.4,
+                            "time": "22:30"
+                        },
+                        {
+                            "value": 7.35,
+                            "time": "22:45"
+                        },
+                        {
+                            "value": 6.3,
+                            "time": "23:00"
+                        },
+                        {
+                            "value": 5.25,
+                            "time": "23:15"
+                        },
+                        {
+                            "value": 4.2,
+                            "time": "23:30"
+                        },
+                        {
+                            "value": 4.2,
+                            "time": "23:45"
+                        }
+                    ]
+                },
+                "substation": "Castries Substation",
+                "title": "ID: 1234",
+                "description": "Type: Commercial"
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -60.98876326679756,
+                    14.018825513076322
+                ]
+            },
+            "properties": {
+                "AMI_id": "1235",
+                "customer_type": "Industrial",
+                "marker-color": "#ff0000",
+                "power_rating": 7.2,
+                "load": {
+                    "time_array": [
+                        {
+                            "value": 3.5,
+                            "time": "00:00"
+                        },
+                        {
+                            "value": 3.85,
+                            "time": "00:15"
+                        },
+                        {
+                            "value": 3.5,
+                            "time": "00:30"
+                        },
+                        {
+                            "value": 3.15,
+                            "time": "00:45"
+                        },
+                        {
+                            "value": 3.5,
+                            "time": "01:00"
+                        },
+                        {
+                            "value": 3.15,
+                            "time": "01:15"
+                        },
+                        {
+                            "value": 3.5,
+                            "time": "01:30"
+                        },
+                        {
+                            "value": 3.85,
+                            "time": "01:45"
+                        },
+                        {
+                            "value": 3.5,
+                            "time": "02:00"
+                        },
+                        {
+                            "value": 3.15,
+                            "time": "02:15"
+                        },
+                        {
+                            "value": 3.5,
+                            "time": "02:30"
+                        },
+                        {
+                            "value": 3.5,
+                            "time": "02:45"
+                        },
+                        {
+                            "value": 3.5,
+                            "time": "03:00"
+                        },
+                        {
+                            "value": 3.85,
+                            "time": "03:15"
+                        },
+                        {
+                            "value": 3.5,
+                            "time": "03:30"
+                        },
+                        {
+                            "value": 3.5,
+                            "time": "03:45"
+                        },
+                        {
+                            "value": 3.5,
+                            "time": "04:00"
+                        },
+                        {
+                            "value": 3.5,
+                            "time": "04:15"
+                        },
+                        {
+                            "value": 3.5,
+                            "time": "04:30"
+                        },
+                        {
+                            "value": 3.85,
+                            "time": "04:45"
+                        },
+                        {
+                            "value": 3.5,
+                            "time": "05:00"
+                        },
+                        {
+                            "value": 3.5,
+                            "time": "05:15"
+                        },
+                        {
+                            "value": 7.0,
+                            "time": "05:30"
+                        },
+                        {
+                            "value": 11.200000000000001,
+                            "time": "05:45"
+                        },
+                        {
+                            "value": 14.35,
+                            "time": "06:00"
+                        },
+                        {
+                            "value": 18.2,
+                            "time": "06:15"
+                        },
+                        {
+                            "value": 22.05,
+                            "time": "06:30"
+                        },
+                        {
+                            "value": 24.5,
+                            "time": "06:45"
+                        },
+                        {
+                            "value": 28.35,
+                            "time": "07:00"
+                        },
+                        {
+                            "value": 32.2,
+                            "time": "07:15"
+                        },
+                        {
+                            "value": 34.3,
+                            "time": "07:30"
+                        },
+                        {
+                            "value": 34.65,
+                            "time": "07:45"
+                        },
+                        {
+                            "value": 34.3,
+                            "time": "08:00"
+                        },
+                        {
+                            "value": 34.65,
+                            "time": "08:15"
+                        },
+                        {
+                            "value": 35.0,
+                            "time": "08:30"
+                        },
+                        {
+                            "value": 33.949999999999996,
+                            "time": "08:45"
+                        },
+                        {
+                            "value": 34.3,
+                            "time": "09:00"
+                        },
+                        {
+                            "value": 34.65,
+                            "time": "09:15"
+                        },
+                        {
+                            "value": 35.0,
+                            "time": "09:30"
+                        },
+                        {
+                            "value": 35.0,
+                            "time": "09:45"
+                        },
+                        {
+                            "value": 34.65,
+                            "time": "10:00"
+                        },
+                        {
+                            "value": 34.3,
+                            "time": "10:15"
+                        },
+                        {
+                            "value": 35.0,
+                            "time": "10:30"
+                        },
+                        {
+                            "value": 34.3,
+                            "time": "10:45"
+                        },
+                        {
+                            "value": 35.0,
+                            "time": "11:00"
+                        },
+                        {
+                            "value": 35.0,
+                            "time": "11:15"
+                        },
+                        {
+                            "value": 34.3,
+                            "time": "11:30"
+                        },
+                        {
+                            "value": 35.0,
+                            "time": "11:45"
+                        },
+                        {
+                            "value": 34.65,
+                            "time": "12:00"
+                        },
+                        {
+                            "value": 34.3,
+                            "time": "12:15"
+                        },
+                        {
+                            "value": 34.65,
+                            "time": "12:30"
+                        },
+                        {
+                            "value": 33.949999999999996,
+                            "time": "12:45"
+                        },
+                        {
+                            "value": 34.3,
+                            "time": "13:00"
+                        },
+                        {
+                            "value": 34.65,
+                            "time": "13:15"
+                        },
+                        {
+                            "value": 35.0,
+                            "time": "13:30"
+                        },
+                        {
+                            "value": 34.65,
+                            "time": "13:45"
+                        },
+                        {
+                            "value": 34.3,
+                            "time": "14:00"
+                        },
+                        {
+                            "value": 33.949999999999996,
+                            "time": "14:15"
+                        },
+                        {
+                            "value": 34.65,
+                            "time": "14:30"
+                        },
+                        {
+                            "value": 34.3,
+                            "time": "14:45"
+                        },
+                        {
+                            "value": 34.65,
+                            "time": "15:00"
+                        },
+                        {
+                            "value": 34.3,
+                            "time": "15:15"
+                        },
+                        {
+                            "value": 34.65,
+                            "time": "15:30"
+                        },
+                        {
+                            "value": 35.0,
+                            "time": "15:45"
+                        },
+                        {
+                            "value": 35.0,
+                            "time": "16:00"
+                        },
+                        {
+                            "value": 34.65,
+                            "time": "16:15"
+                        },
+                        {
+                            "value": 34.3,
+                            "time": "16:30"
+                        },
+                        {
+                            "value": 35.0,
+                            "time": "16:45"
+                        },
+                        {
+                            "value": 34.65,
+                            "time": "17:00"
+                        },
+                        {
+                            "value": 30.8,
+                            "time": "17:15"
+                        },
+                        {
+                            "value": 28.0,
+                            "time": "17:30"
+                        },
+                        {
+                            "value": 24.849999999999998,
+                            "time": "17:45"
+                        },
+                        {
+                            "value": 21.7,
+                            "time": "18:00"
+                        },
+                        {
+                            "value": 18.55,
+                            "time": "18:15"
+                        },
+                        {
+                            "value": 15.4,
+                            "time": "18:30"
+                        },
+                        {
+                            "value": 10.85,
+                            "time": "18:45"
+                        },
+                        {
+                            "value": 7.7,
+                            "time": "19:00"
+                        },
+                        {
+                            "value": 7.35,
+                            "time": "19:15"
+                        },
+                        {
+                            "value": 7.0,
+                            "time": "19:30"
+                        },
+                        {
+                            "value": 7.7,
+                            "time": "19:45"
+                        },
+                        {
+                            "value": 7.0,
+                            "time": "20:00"
+                        },
+                        {
+                            "value": 7.35,
+                            "time": "20:15"
+                        },
+                        {
+                            "value": 7.7,
+                            "time": "20:30"
+                        },
+                        {
+                            "value": 7.0,
+                            "time": "20:45"
+                        },
+                        {
+                            "value": 7.0,
+                            "time": "21:00"
+                        },
+                        {
+                            "value": 7.35,
+                            "time": "21:15"
+                        },
+                        {
+                            "value": 7.0,
+                            "time": "21:30"
+                        },
+                        {
+                            "value": 7.0,
+                            "time": "21:45"
+                        },
+                        {
+                            "value": 7.0,
+                            "time": "22:00"
+                        },
+                        {
+                            "value": 7.35,
+                            "time": "22:15"
+                        },
+                        {
+                            "value": 7.0,
+                            "time": "22:30"
+                        },
+                        {
+                            "value": 6.65,
+                            "time": "22:45"
+                        },
+                        {
+                            "value": 7.0,
+                            "time": "23:00"
+                        },
+                        {
+                            "value": 7.35,
+                            "time": "23:15"
+                        },
+                        {
+                            "value": 7.0,
+                            "time": "23:30"
+                        },
+                        {
+                            "value": 6.65,
+                            "time": "23:45"
+                        }
+                    ]
+                },
+                "substation": "Castries Substation",
+                "title": "ID: 1235",
+                "description": "Type: Industrial"
+            }
+        }
+    ],
+    "profiles": [
+        {
+            "name": "Customer - Heavy connection",
+            "peak_load": 21,
+            "base_profile": "Household"
+        },
+        {
+            "name": "Industrial",
+            "peak_load": 100,
+            "base_profile": "Industrial"
+        },
+        {
+            "name": "Shops",
+            "peak_load": 300,
+            "base_profile": "Commercial"
+        },
+        {
+            "name": "Households - Big",
+            "peak_load": 600,
+            "base_profile": "Household"
+        },
+        {
+            "name": "Huishouden",
+            "peak_load": 1,
+            "base_profile": "Household"
+        },
+        {
+            "name": "Playa",
+            "peak_load": 50,
+            "base_profile": "Standaardprofiel Wijk"
+        },
+        {
+            "name": "EV - Daily Charge - 7 PM - AC",
+            "peak_load": 7,
+            "base_profile": "EV - Daily Charge - 7 PM"
+        }
+    ],
+    "feeders": [],
+    "lines": [
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        -60.9920207940654,
+                        14.017779432960527
+                    ],
+                    [
+                        -60.99086212099295,
+                        14.019898839821186
+                    ]
+                ]
+            },
+            "properties": {
+                "substation": "Castries Substation",
+                "AMI": "1231",
+                "stroke": "#939393",
+                "gap-size": 2
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        -60.9920207940654,
+                        14.017779432960527
+                    ],
+                    [
+                        -60.98965731817721,
+                        14.020230306171337
+                    ]
+                ]
+            },
+            "properties": {
+                "substation": "Castries Substation",
+                "AMI": "1232",
+                "stroke": "#939393",
+                "gap-size": 2
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        -60.9920207940654,
+                        14.017779432960527
+                    ],
+                    [
+                        -60.98987003818484,
+                        14.019517640196426
+                    ]
+                ]
+            },
+            "properties": {
+                "substation": "Castries Substation",
+                "AMI": "1233",
+                "stroke": "#939393",
+                "gap-size": 2
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        -60.9920207940654,
+                        14.017779432960527
+                    ],
+                    [
+                        -60.99021213038546,
+                        14.018166253973964
+                    ]
+                ]
+            },
+            "properties": {
+                "substation": "Castries Substation",
+                "AMI": "1234",
+                "stroke": "#939393",
+                "gap-size": 2
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        -60.9920207940654,
+                        14.017779432960527
+                    ],
+                    [
+                        -60.98876326679756,
+                        14.018825513076322
+                    ]
+                ]
+            },
+            "properties": {
+                "substation": "Castries Substation",
+                "AMI": "1235",
+                "stroke": "#939393",
+                "gap-size": 2
+            }
+        }
+    ]
+}
