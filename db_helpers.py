@@ -72,7 +72,6 @@ def create_lines():
     
     data['lines'] = lines
     save_database(data)
-
     return
 
 
