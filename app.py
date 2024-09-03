@@ -317,13 +317,18 @@ class Controller(ViktorController):
         
         db.add_model(
             
-            params["page_0"]["tab_train"]["model_name"], 
+
+
+            params["page_0"]["tab_train"]["model_name"],
+            params["page_0"]["tab_train"]["target"],
+
             list(X.columns),
             list(model.coef_),
             list(y_test),
             list(predictions),
             mean_squared_error(y_test, predictions), 
-            mean_absolute_error(y_test, predictions))
+            mean_absolute_error(y_test, predictions)
+            )
         
         print(predictions)
 
@@ -422,13 +427,14 @@ class Controller(ViktorController):
         data_items = []
         for i in data:
             data_items.append(
-                DataItem(i['model_name'], ' ', subgroup = DataGroup(
+                DataItem("Model", "**{}**".format(i['model_name']), subgroup = DataGroup(
+                    DataItem('Target', i['target']),
+                    DataItem('Features', ' ', subgroup = DataGroup(*[DataItem(' ', x) for x in i['features']])),
                     DataItem('MSE', i['MSE']),
                     DataItem('MAE', i['MAE']),
-                    DataItem('Features \n \n', i['features'])
-                ))
-            )
-        models = DataGroup(DataItem('Models', '', subgroup = DataGroup(*data_items)))
+                )
+            ))
+        models = DataGroup(*data_items)
         return DataResult(models)
     
     @PlotlyView('[II] Prediction Analysis', duration_guess=10)
@@ -447,11 +453,10 @@ class Controller(ViktorController):
         data = db.open_models()
         data = data['models']
         for m in data:
+            
             if m['model_name'] == model_name:
                 model_features = m['features']
-                
-                # TODO: add target as model attribute when uploading model
-                model_target = 'Y house price of unit area'
+                model_target = m['target']
         
         df_23_ytest = df[df['Time'].str.contains('22|23')][model_target]
         df_23_Xtest = df[df['Time'].str.contains('22|23')][model_features]
@@ -490,24 +495,27 @@ class Controller(ViktorController):
         for m in data:
             if m['model_name'] == model_name:
                 model_features = m['features']
-                
-                # TODO: add target as model attribute when uploading model
-                model_target = 'Y house price of unit area'
+                model_target = m['target']
         
-        df_24_x_pred = df[df['Time'].str.contains('24')][model_features][6:]
-        old_values = list(df[df['Time'].str.contains('23')][model_target])[6:]
+        df_select = df[df[model_target].isnull()]
+        print(df_select)
+        df_24_x_pred = df_select[model_features]
+        print(df_24_x_pred)
+        index_start = df_select.index[0]
+        index_end = index_start + len(df_select)
+        old_values = list(df[model_target])[index_start-12:index_end-12]
         predictions = model.predict(df_24_x_pred)
 
         result = []
         for i in range(len(old_values)):
             result.append(round(((predictions[i] - old_values[i])/old_values[i])*100))
         
-        x_ax = df[df['Time'].str.contains('24')]['Time'][len(df_24_x_pred):]
+        x_ax = df['Time'][index_start:index_end]
         
         fig = make_subplots(specs=[[{"secondary_y": True}]])
  
         fig.add_trace(
-        go.Bar(y=result, x=x_ax, name="LG %", opacity=0.5, marker=dict(color='lightseagreen')),
+        go.Bar(y=result, x=x_ax, name="LG %", opacity=0.3, marker=dict(color='lightsteelblue')),
         secondary_y=False,
         )
 

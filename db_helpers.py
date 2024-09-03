@@ -24,7 +24,7 @@ def open_models():
         
     return data
 
-def add_model(name, features, coef, y_test, predictions, MSE, MAE):
+def add_model(name, target, features, coef, y_test, predictions, MSE, MAE):
     json_file = Path(__file__).parent / 'models.json'
     
     with open(json_file, 'r') as f:
@@ -33,6 +33,7 @@ def add_model(name, features, coef, y_test, predictions, MSE, MAE):
     models = data['models']
     models.append({
         'model_name' : name,
+        'target' : target,
         'features' : features, 
         'coefficients' : coef,
         'y_test' : y_test,
