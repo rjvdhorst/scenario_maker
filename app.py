@@ -134,7 +134,7 @@ def EV_charging_profiles(params, **kwargs):
 
 
 def customer_load_profiles(params, **kwargs):
-    substation_name = params['page_3']['section_1']['substation_name']
+    substation_name = params['page_3']['section_0']['substation_name']
     substation = db.Substation.get_substation_by_name(substation_name)
     connected_amis = substation.get_connected_AMIs()
 
@@ -172,12 +172,26 @@ def customer_load_growth(params, **kwargs):
 
 
 def solar_profiles(params, **kwargs):
-    substation_name = params['page_3']['section_1']['substation_name']
+    substation_name = params['page_3']['section_0']['substation_name']
     data = params['page_3']['section_2']['solar_array']
     substation = db.Substation.get_substation_by_name(substation_name)
 
     peak_load = 0
-
+    
+    aggregated_profiles = {}
+    
+    if not data:
+        aggregated_profiles['Solar'] = [0] * 96
+        return aggregated_profiles
+    
+    for entry in data:
+        if not entry['percentage']:
+            aggregated_profiles['Solar'] = [0] * 96
+            return aggregated_profiles
+        if not entry['peak_load']:
+            aggregated_profiles['Solar'] = [0] * 96
+            return aggregated_profiles
+    
     for entry in data:
         customer_group = entry['customer_group']
         number_of_customers = 0
@@ -194,7 +208,6 @@ def solar_profiles(params, **kwargs):
 
     peak_load = round(peak_load, 1)
     solar_profile = ph.LoadProfile('Solar', peak_load, 'Solar_array').scale_profile()
-    aggregated_profiles = {}
     aggregated_profiles['Solar'] = [0] * 96
 
     for i, entry in enumerate(solar_profile['time_array']):
@@ -206,8 +219,9 @@ def solar_profiles(params, **kwargs):
 
 def solar_peak_load(params, **kwargs):
     if solar_profiles(params) == {}:
-        return 0
-    return -1*min(solar_profiles(params)['Solar'])
+        return "Calculating..."
+    else:
+        return -1*min(solar_profiles(params)['Solar'])
 
 class Parametrization(ViktorParametrization):
     # step_1 = Step("Manage Substations/Transformers", views=["get_map_view_1"], enabled=False)
@@ -241,7 +255,48 @@ class Parametrization(ViktorParametrization):
     # step_2.section_1.dynamic_array_1.peak_load = NumberField("Peak Load", suffix='KW', flex=33)
     # step_2.section_1.dynamic_array_1.base_profile = OptionField("Base Load Profile", options=list_base_profiles(), flex=33)
     # step_2.section_1.normalize_button = ActionButton('Add to database', flex=100, method='add_load_profile')
-    page_0 = Page("Load Growth Factor Regression", views = ["get_table_view", "get_data_view", "get_predict_view", "get_forecast_view"], width=30)
+
+    
+    # step_2.section_2 = Section("Add Base Load Profiles")
+    # step_2.section_2.introtext = Text("A Base Load Profile can be configured by filling the table below. Note that the profile is a normalized profile. A value of 1 is equal to the peak load that will be assigned to the profile in a next step.")
+    # step_2.section_2.profile_name = TextField("##### Name", flex=80)
+    # step_2.section_2.table = Table("Create a New Base Load Profile", default=create_default_content())
+    # step_2.section_2.table.time = TextField('time')
+    # step_2.section_2.table.value = NumberField('value')
+    # step_2.section_2.upload_button = ActionButton("Save Base Load Profile", flex=60, method='save_base_profile')
+
+    # step_2.section_3 = Section("View Base Load Profile")
+    # step_2.section_3.select_load_profile = OptionField("Select Base Load Profile", options=list_base_profiles(), default='Household', flex=50)
+    
+    page_3 = Page("Energy Landscape Builder", views=['get_map_view_1', 'get_plotly_view_2', 'substation_load_overview'])
+    
+    page_3.section_0 = Section("Select Substation")
+    page_3.section_0.substation_name = OptionField("Substation", options=list_substations(), flex=50)
+
+    page_3.section_1 = Section("Load Growth", description="Assign a load growth factor to each customer group for the selected substation.")
+    page_3.section_1.text_1 = Text("""To carefully predict the load on the substation, a different load growth factor can be assigned to each customer group.""")
+    page_3.section_1.table = DynamicArray("")
+    page_3.section_1.table.customer_type = OptionField("Customer Group", options=['Household', 'Industrial', 'Commercial'], flex=50)
+    page_3.section_1.table.lgf = IntegerField("Load Growth (%)", description="Define how many customers of this type are connected.", flex=50)
+
+    # page_3.section_1.connect_button = SetParamsButton('Connect', flex=100, method='connect_load')
+
+    page_3.section_2 = Section("Rooftop Solar", description="Assign a peak power production load to substation, based on the number of solar panels installed.")
+    page_3.section_2.intro = Text('This section allows you to add and simulate the impact of rooftop solar panels on the substation.')
+    page_3.section_2.solar_array = DynamicArray("")
+    page_3.section_2.solar_array.customer_group = OptionField('Customer Group', options=['Household', 'Industrial', 'Commercial'], flex=50)
+    page_3.section_2.solar_array.percentage = NumberField('% of Customers', description='Give the', flex=50, variant='slider', min=0, max=100, step=5)
+    page_3.section_2.solar_array.peak_load = NumberField('Number of Panels (500 Wp)', flex=100)
+    page_3.section_2.max_solar_load = OutputField('Installed Capacity', suffix='kWp', value=solar_peak_load,  flex=50)
+
+    page_3.section_3 = Section("EV Charging", description="Add EV charging stations to the substation. Choose between the different types of charging stations and their corresponding chargin behaviour.")
+    page_3.section_3.intro = Text('This section allows you to add and simulate the impact of EV charging stations on the substation.')
+    page_3.section_3.array = DynamicArray("")
+    page_3.section_3.array.type = OptionField("#### Type", options=['Slow (7 KW)', 'Public Fast (22 KW)', 'Public Ultra Fast (70 KW)'], flex=50)
+    page_3.section_3.array.number = IntegerField("#### Number", flex=50 )
+    
+    
+    page_0 = Page("Load Growth Estimator", views = ["get_table_view", "get_data_view", "get_predict_view", "get_forecast_view"], width=30)
     
     # TODO: Tab 0 Upload File
     page_0.tab_train = Tab("[I] Train Model")
@@ -257,42 +312,7 @@ class Parametrization(ViktorParametrization):
     
     page_0.tab_forecast = Tab("[III] Forecast")
     page_0.tab_forecast.model_name = TextField('Model Name', flex = 100)
-    
-    # step_2.section_2 = Section("Add Base Load Profiles")
-    # step_2.section_2.introtext = Text("A Base Load Profile can be configured by filling the table below. Note that the profile is a normalized profile. A value of 1 is equal to the peak load that will be assigned to the profile in a next step.")
-    # step_2.section_2.profile_name = TextField("##### Name", flex=80)
-    # step_2.section_2.table = Table("Create a New Base Load Profile", default=create_default_content())
-    # step_2.section_2.table.time = TextField('time')
-    # step_2.section_2.table.value = NumberField('value')
-    # step_2.section_2.upload_button = ActionButton("Save Base Load Profile", flex=60, method='save_base_profile')
 
-    # step_2.section_3 = Section("View Base Load Profile")
-    # step_2.section_3.select_load_profile = OptionField("Select Base Load Profile", options=list_base_profiles(), default='Household', flex=50)
-    
-    page_3 = Page("Develop Energy Landscape", views=['get_map_view_1', 'get_plotly_view_2', 'substation_load_overview'])
-    page_3.section_1 = Section("Load growth factor", description="Assign a load growth factor to each customer group for the selected substation.")
-    page_3.section_1.text_1 = Text("""To carefully predict the load on the substation, a different load growth factor can be assigned to each customer group.""")
-    page_3.section_1.substation_name = OptionField("Substation", options=list_substations(), flex=50)
-    page_3.section_1.table = DynamicArray("### Load Growth Factor \n Add load to the selected substation")
-    page_3.section_1.table.customer_type = OptionField("Customer Group", options=['Household', 'Industrial', 'Commercial'], flex=50)
-    page_3.section_1.table.lgf = IntegerField("Load Growth Factor (percentage)", description="Define how many customers of this type are connected.", flex=50)
-
-    # page_3.section_1.connect_button = SetParamsButton('Connect', flex=100, method='connect_load')
-
-    page_3.section_2 = Section("Rooftop Solar", description="Assign a peak power production load to substation, based on the number of solar panels installed.")
-    page_3.section_2.intro = Text('This section allows you to add and simulate the impact of rooftop solar panels on the substation.')
-    page_3.section_2.solar_array = DynamicArray("Calculated Rooftop Solar")
-    page_3.section_2.solar_array.customer_group = OptionField('Customer Group', options=['Household', 'Industrial', 'Commercial'], flex=50)
-    page_3.section_2.solar_array.percentage = IntegerField('Percentage', description='Give the', flex=50)
-    page_3.section_2.solar_array.peak_load = NumberField('Number of panels (500W each)', flex=100)
-    page_3.section_2.max_solar_load = OutputField('Load', suffix='KW', value=solar_peak_load,  flex=50)
-
-    page_3.section_3 = Section("EV charging landscape", description="Add EV charging stations to the substation. Choose between the different types of charging stations and their corresponding chargin behaviour.")
-    page_3.section_3.intro = Text('This section allows you to add and simulate the impact of EV charging stations on the substation.')
-    page_3.section_3.array = DynamicArray("EV Charging Stations")
-    page_3.section_3.array.type = OptionField("#### Type", options=['Slow (7 KW)', 'Public Fast (22 KW)', 'Public Ultra Fast (70 KW)'], flex=50)
-    page_3.section_3.array.number = IntegerField("#### Number", flex=50 )
-    
 
 class Controller(ViktorController):
     label = "My Entity Type"
@@ -361,7 +381,7 @@ class Controller(ViktorController):
             load.save_profile()
 
     def connect_load(self, params, **kwargs):
-        substation_name = params['page_3']['section_1']['substation_name']
+        substation_name = params['page_3']['section_0']['substation_name']
         data = params['page_3']['section_1']['dynamic_array_1']
         for connection in data:
             substation = db.Substation.get_substation_by_name(substation_name)
@@ -616,7 +636,7 @@ class Controller(ViktorController):
         
         return PlotlyResult(fig)
     
-    @GeoJSONView('Energy Asset Overview', duration_guess=10)
+    @GeoJSONView('Energy Landscape Overview', duration_guess=10)
     def get_map_view_1(self, params, **kwargs):
 
         data = db.open_database()
@@ -642,7 +662,7 @@ class Controller(ViktorController):
     def get_plotly_view_2(self, params, **kwargs):
         import plotly.graph_objects as go
         aggregated_profiles = {}
-        substation_name = params['page_3']['section_1']['substation_name']
+        substation_name = params['page_3']['section_0']['substation_name']
 
         aggregated_profiles = aggregated_load_profiles(params)
         time_intervals = aggregated_profiles['time_array']
@@ -650,23 +670,23 @@ class Controller(ViktorController):
 
         # Define color scheme
         color_map = {
-            'Household': 'rgb(31, 119, 180)',  # Blue for Household
-            'Potential Growth - Household': 'rgba(31, 119, 180, 0.5)',  # Lighter blue for potential growth
-            'Industrial': 'rgb(44, 160, 44)',  # Green for Industrial
-            'Potential Growth - Industrial': 'rgba(44, 160, 44, 0.5)',  # Lighter green for potential growth
-            'Commercial': 'rgb(255, 127, 14)',  # Orange for Commercial
-            'Potential Growth - Commercial': 'rgba(255, 127, 14, 0.5)',  # Lighter orange for potential growth
+            'Household': 'rgb(4, 118, 208)',  # Blue for Household
+            'Load Growth - Household': 'rgba(4, 118, 208, 0.5)',  # Lighter blue for potential growth
+            'Industrial': 'rgb(137, 207, 240)',  # DarkBlue for Industrial
+            'Load Growth - Industrial': 'rgba(137, 207, 240, 0.5)',  # Lighter for potential growth
+            'Commercial': 'rgb(0, 0, 139)',  # Orange for Commercial
+            'Load Growth - Commercial': 'rgba(0, 0, 139, 0.5)',  # Lighter orange for potential growth
             'Slow Charging': 'rgb(148, 103, 189)',  # Purple for Slow Charging
             'Fast Charging': 'rgba(148, 103, 189, 0.75)',  # Medium purple for Fast Charging
             'Ultra Fast Charging': 'rgba(148, 103, 189, 0.5)',  # Lighter purple for Ultra Fast Charging
-            'Solar': 'rgb(255, 255, 0)'  # Yellow for Solar generation
+            'Solar': 'rgb(255, 215, 0)'  # Yellow for Solar generation
         }
 
         # Define the order of layers
         layer_order = [
-            'Household', 'Potential Growth - Household',  # Bottom layers
             'Industrial', 'Potential Growth - Industrial',
             'Commercial', 'Potential Growth - Commercial',
+            'Household', 'Potential Growth - Household',  # Bottom layers
             'Slow Charging', 'Fast Charging', 'Ultra Fast Charging',  # EV Charging
             'Solar'  # Solar on top
         ]
@@ -687,7 +707,7 @@ class Controller(ViktorController):
         # Customize layout
         fig.update_layout(
             barmode='stack',
-            title=f'Aggregated Load Profile for {substation_name}',
+            title=f'Aggregated Load Profile for <b>{substation_name}',
             xaxis_title='Time',
             yaxis_title='Load (kW)',
             legend_title='Customer Type',
@@ -701,9 +721,9 @@ class Controller(ViktorController):
 
 
 
-    @DataView("Substation - Load overview", duration_guess=10)
+    @DataView("Assumptions Overview", duration_guess=10)
     def substation_load_overview(self, params, **kwargs):
-        substation_name = params['page_3']['section_1']['substation_name']
+        substation_name = params['page_3']['section_0']['substation_name']
         aggregated_profiles = aggregated_load_profiles(params)
         aggregated_profiles.pop('time_array')
 

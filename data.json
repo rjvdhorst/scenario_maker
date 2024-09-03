@@ -12,7 +12,9 @@
             "properties": {
                 "name": "Castries Substation",
                 "loads": [],
-                "title": "Castries Substation"
+                "title": "Castries Substation",
+                "icon":"square-filled",
+                "marker-size":"small"
             }
         }
     ],
@@ -29,7 +31,9 @@
             "properties": {
                 "AMI_id": "1231",
                 "customer_type": "Household",
-                "marker-color": "#ffff00",
+                "marker-color": "#4169E1",
+                "icon":"circle-filled",
+                "marker-size":"small",
                 "power_rating": 7.2,
                 "load": {
                     "time_array": [
@@ -436,7 +440,9 @@
             "properties": {
                 "AMI_id": "1232",
                 "customer_type": "Household",
-                "marker-color": "#ffff00",
+                "marker-color": "#4169E1",
+                "icon":"circle-filled",
+                "marker-size":"small",
                 "power_rating": 7.2,
                 "load": {
                     "time_array": [
@@ -843,7 +849,9 @@
             "properties": {
                 "AMI_id": "1233",
                 "customer_type": "Household",
-                "marker-color": "#ffff00",
+                "marker-color": "#4169E1",
+                "icon":"circle-filled",
+                "marker-size":"small",
                 "power_rating": 7.2,
                 "load": {
                     "time_array": [
@@ -1250,7 +1258,9 @@
             "properties": {
                 "AMI_id": "1234",
                 "customer_type": "Commercial",
-                "marker-color": "#0000ff",
+                "marker-color": "#2F4F4F",
+                "icon":"circle-filled",
+                "marker-size":"small",
                 "power_rating": 7.2,
                 "load": {
                     "time_array": [
@@ -1657,7 +1667,9 @@
             "properties": {
                 "AMI_id": "1235",
                 "customer_type": "Industrial",
-                "marker-color": "#ff0000",
+                "marker-color": "#708090",
+                "icon":"circle-filled",
+                "marker-size":"small",
                 "power_rating": 7.2,
                 "load": {
                     "time_array": [
