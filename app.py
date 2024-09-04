@@ -162,7 +162,7 @@ def customer_load_growth(params, **kwargs):
 
     for entry in data:
         customer_type = entry['customer_type']
-        customer_key = 'Potential Growth - ' + customer_type
+        customer_key = 'Load Growth - ' + customer_type
         load_growth_factor = entry['lgf']*0.01
         potential_load[customer_key] = [0] * len(time_invervals)
         for i, entry in enumerate(customers_aggregated_load[customer_type]):
@@ -684,9 +684,9 @@ class Controller(ViktorController):
 
         # Define the order of layers
         layer_order = [
-            'Industrial', 'Potential Growth - Industrial',
-            'Commercial', 'Potential Growth - Commercial',
-            'Household', 'Potential Growth - Household',  # Bottom layers
+            'Industrial', 'Load Growth - Industrial',
+            'Commercial', 'Load Growth - Commercial',
+            'Household', 'Load Growth - Household',  # Bottom layers
             'Slow Charging', 'Fast Charging', 'Ultra Fast Charging',  # EV Charging
             'Solar'  # Solar on top
         ]
@@ -750,9 +750,9 @@ class Controller(ViktorController):
                 industrial=DataItem('Industrial Connections: (' + str(industrial_amis) +')', max(aggregated_profiles['Industrial']), prefix='Combined Peak Load', suffix='KW'),
                 commercial=DataItem('Commercial Connections: (' + str(commercial_amis) +')', max(aggregated_profiles['Commercial']), prefix='Combined Peak Load', suffix='KW'),
             )),
-            rooftop_solar = DataItem('Rooftop Solar', 'Maximum peak generation: ' + str(solar_peakload), suffix='KW'),
+            rooftop_solar = DataItem('Rooftop Solar', str(solar_peakload), suffix='kWp'),
             EV_charging = DataItem('EV Charging', '', subgroup=DataGroup(
-                total_power=DataItem('Total installed power:', total_ev_power, suffix='KW'),
+                total_power=DataItem('Total installed power:', total_ev_power, suffix='kW'),
                 number_of_chargers=DataItem('Total number of chargers:', sum([entry['number'] for entry in params['page_3']['section_3']['array']]), subgroup=DataGroup(
                     slow_chargers=DataItem('Slow (7 KW):', sum([entry['number'] for entry in params['page_3']['section_3']['array'] if entry['type'] == 'Slow (7 KW)'])),
                     fast_chargers=DataItem('Fast (22 KW):', sum([entry['number'] for entry in params['page_3']['section_3']['array'] if entry['type'] == 'Public Fast (22 KW)'])),
