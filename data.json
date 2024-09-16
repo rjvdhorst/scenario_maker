@@ -11,12 +11,11 @@
             },
             "properties": {
                 "name": "Castries Substation",
-                "loads": [],
                 "title": "Castries Substation"
             }
         }
     ],
-    "AMIs": [
+    "connections": [
         {
             "type": "Feature",
             "geometry": {
@@ -27,7 +26,7 @@
                 ]
             },
             "properties": {
-                "AMI_id": "1231",
+                "connection_id": "1231",
                 "customer_type": "Household",
                 "marker-color": "#ffff00",
                 "power_rating": 7.2,
@@ -434,7 +433,7 @@
                 ]
             },
             "properties": {
-                "AMI_id": "1232",
+                "connection_id": "1232",
                 "customer_type": "Household",
                 "marker-color": "#ffff00",
                 "power_rating": 7.2,
@@ -841,7 +840,7 @@
                 ]
             },
             "properties": {
-                "AMI_id": "1233",
+                "connection_id": "1233",
                 "customer_type": "Household",
                 "marker-color": "#ffff00",
                 "power_rating": 7.2,
@@ -1248,7 +1247,7 @@
                 ]
             },
             "properties": {
-                "AMI_id": "1234",
+                "connection_id": "1234",
                 "customer_type": "Commercial",
                 "marker-color": "#0000ff",
                 "power_rating": 7.2,
@@ -1655,7 +1654,7 @@
                 ]
             },
             "properties": {
-                "AMI_id": "1235",
+                "connection_id": "1235",
                 "customer_type": "Industrial",
                 "marker-color": "#ff0000",
                 "power_rating": 7.2,
@@ -2090,7 +2089,6 @@
             "base_profile": "EV - Daily Charge - 7 PM"
         }
     ],
-    "feeders": [],
     "lines": [
         {
             "type": "Feature",
