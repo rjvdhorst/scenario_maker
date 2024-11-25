@@ -21,6 +21,7 @@
     "AMIs": [
         {
             "type": "Feature",
+            "id": 1,
             "geometry": {
                 "type": "Point",
                 "coordinates": [
@@ -430,6 +431,7 @@
         },
         {
             "type": "Feature",
+            "id": 2,
             "geometry": {
                 "type": "Point",
                 "coordinates": [
@@ -839,6 +841,7 @@
         },
         {
             "type": "Feature",
+            "id": 3,
             "geometry": {
                 "type": "Point",
                 "coordinates": [
@@ -1248,6 +1251,7 @@
         },
         {
             "type": "Feature",
+            "id": 4,
             "geometry": {
                 "type": "Point",
                 "coordinates": [
@@ -1657,6 +1661,7 @@
         },
         {
             "type": "Feature",
+            "id": 5,
             "geometry": {
                 "type": "Point",
                 "coordinates": [
