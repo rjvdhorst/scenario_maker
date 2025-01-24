@@ -6,4 +6,4 @@ app_type = 'simple'
 # packages = []
 python_version = '3.10'  # '3.9' | '3.10' | '3.11' | '3.12'
 # welcome_text = 'welcome.md'
-# registered_name = 'app-name'
+registered_name = "scenario-maker"
