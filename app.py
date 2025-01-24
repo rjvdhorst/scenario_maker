@@ -16,7 +16,7 @@ from viktor.parametrization import (
     GeoPolygonField,
     BooleanField,
     LineBreak,
-    MultiSelectField, FileField, ActionButton, SetParamsButton, Page
+    MultiSelectField, FileField, ActionButton, SetParamsButton, Page, MapSelectInteraction
 )
 from pathlib import Path
 from io import BytesIO
@@ -144,7 +144,6 @@ def aggregated_load_profiles(params, **kwargs):
     aggregated_profiles.update(solar_profile)
     
     return aggregated_profiles
-
 
 
 def EV_charging_profiles(params, **kwargs):
@@ -290,33 +289,18 @@ class Parametrization(ViktorParametrization):
     # step_1.section_3.remove_button = ActionButton('Remove from Database', flex=50, method='remove_substation')
     # step_1.section_3.create_lines = ActionButton('Create lines', flex=50, method='create_lines')
 
-    # step_2 = Step("Manage Load Profiles", description="Manage load profiles for different customer groups", views=['plotly_new_load_profile', "get_plotly_view_1"],  enabled=True)
-
-    # step_2.section_1 = Section("Create Customer Group", description="Customize the specified load profiles. ")
-    # step_2.section_1.intro = Text("""Create load profiles for different customer types. Specify the name, peak load, and base profile. The base profile is a predefined profile that can be scaled to the peak load.""")
-
-    # step_2.section_1.dynamic_array_1 = DynamicArray("")
-    # step_2.section_1.dynamic_array_1.profile_name = TextField("Name", flex=33)
-    # step_2.section_1.dynamic_array_1.peak_load = NumberField("Peak Load", suffix='KW', flex=33)
-    # step_2.section_1.dynamic_array_1.base_profile = OptionField("Base Load Profile", options=list_base_profiles(), flex=33)
-    # step_2.section_1.normalize_button = ActionButton('Add to database', flex=100, method='add_load_profile')
-
-    
-    # step_2.section_2 = Section("Add Base Load Profiles")
-    # step_2.section_2.introtext = Text("A Base Load Profile can be configured by filling the table below. Note that the profile is a normalized profile. A value of 1 is equal to the peak load that will be assigned to the profile in a next step.")
-    # step_2.section_2.profile_name = TextField("##### Name", flex=80)
-    # step_2.section_2.table = Table("Create a New Base Load Profile", default=create_default_content())
-    # step_2.section_2.table.time = TextField('time')
-    # step_2.section_2.table.value = NumberField('value')
-    # step_2.section_2.upload_button = ActionButton("Save Base Load Profile", flex=60, method='save_base_profile')
-
-    # step_2.section_3 = Section("View Base Load Profile")
-    # step_2.section_3.select_load_profile = OptionField("Select Base Load Profile", options=list_base_profiles(), default='Household', flex=50)
-    
     page_3 = Page("Energy Landscape Builder", views=['get_map_view_1', 'get_plotly_view_2', 'substation_load_overview'])
     
     page_3.section_0 = Section("Select Substation")
-    page_3.section_0.substation_name = OptionField("Substation", options=['253166'], flex=50)
+    page_3.section_0.substation_name = OptionField("Substation", options=list_substations(), flex=50)
+
+    page_3.section_01 =           Section("Assign Profiles")
+    page_3.section_01.selection = SetParamsButton("Select Customers",
+                                    method="select_customers",
+                                    interaction=MapSelectInteraction('get_map_view_1', selection=['connections'], max_select=50), flex=100
+                                    )
+    
+    page_3.section_01.substation_name = OptionField("Customer Profile", options=list_customer_profiles(), flex=50)
 
     page_3.section_1 = Section("Load Growth", description="Assign a load growth factor to each customer group for the selected substation.")
     page_3.section_1.text_1 = Text("""To carefully predict the load on the substation, a different load growth factor can be assigned to each customer group.""")
@@ -340,6 +324,31 @@ class Parametrization(ViktorParametrization):
     page_3.section_3.array.type = OptionField("#### Type", options=['Slow (7 KW)', 'Public Fast (22 KW)', 'Public Ultra Fast (70 KW)'], flex=50)
     page_3.section_3.array.number = IntegerField("#### Number", flex=50 )
     
+    ###
+    
+    step_2 = Page("Load Profile Manager", views=["get_plotly_view_1",'plotly_new_load_profile'])
+    
+    step_2.section_3 = Section("View Base Load Profile")
+    step_2.section_3.select_load_profile = OptionField("Select Base Load Profile", options=list_base_profiles(), default='Household', flex=50)
+    
+    step_2.section_1 = Section("Create Customer Group", description="Customize the specified load profiles. ")
+    step_2.section_1.intro = Text("""Create load profiles for different customer types. Specify the name, peak load, and base profile. The base profile is a predefined profile that can be scaled to the peak load.""")
+
+    step_2.section_1.dynamic_array_1 = DynamicArray("")
+    step_2.section_1.dynamic_array_1.profile_name = TextField("Name", flex=33)
+    step_2.section_1.dynamic_array_1.peak_load = NumberField("Peak Load", suffix='KW', flex=33)
+    step_2.section_1.dynamic_array_1.base_profile = OptionField("Base Load Profile", options=list_base_profiles(), flex=33)
+    step_2.section_1.normalize_button = ActionButton('Add to database', flex=100, method='add_load_profile')
+
+    step_2.section_2 = Section("Add Base Load Profiles")
+    step_2.section_2.introtext = Text("A Base Load Profile can be configured by filling the table below. Note that the profile is a normalized profile. A value of 1 is equal to the peak load that will be assigned to the profile in a next step.")
+    step_2.section_2.profile_name = TextField("##### Name", flex=80)
+    step_2.section_2.table = Table("Create a New Base Load Profile", default=create_default_content())
+    step_2.section_2.table.time = TextField('time')
+    step_2.section_2.table.value = NumberField('value')
+    step_2.section_2.upload_button = ActionButton("Save Base Load Profile", flex=60, method='save_base_profile')
+
+    ###
     
     page_0 = Page("Load Growth Estimator", views = ["get_table_view", "get_data_view", "get_predict_view", "get_forecast_view"], width=30)
     
@@ -363,6 +372,33 @@ class Controller(ViktorController):
     label = "My Entity Type"
     parametrization = Parametrization
 
+    def select_customers(self, params, event, **kwargs):
+    
+        selected_verdeelkasten = event.value        
+        new_lines = []
+        
+        # for i in selected_verdeelkasten:
+        #     kast = db.DB_find_entry(i)
+        #     sel_dict = {
+        #         "type":"Feature",
+        #         "id":str(uuid.uuid4()),
+        #         "geometry":{
+        #             "type":"LineString",
+        #             "coordinates":[ast.literal_eval(params.connect_tab.section_kasten.master_coord), kast['document']['geometry']['coordinates']]
+        #             },
+        #         "properties": {
+        #             "from-to" : [kast['document']["id"], params.connect_tab.section_kasten.master_id],
+        #             "description" : "master-connection",
+        #             "stroke" : "#545454"
+        #             }
+        #         }
+                
+        #     new_lines.append(sel_dict)
+        
+        #     result = db.DB_add_many(new_lines)
+        
+        return SetParamsResult({})  
+    
     def train_model(self, params, **kwargs):
         upload_file = params["page_0"]["tab_train"]["file"].file
         data_file = BytesIO(upload_file.getvalue_binary())
@@ -699,33 +735,24 @@ class Controller(ViktorController):
         
         meter_objs, line_objs = trafo.get_connections()
         features = []
+        connections = []
         
-        features.append(trafo.to_geojson())
+        for substation in data['substations']:
+            features.append(substation)
+        for AMI in data['AMIs']:
+            connections.append(AMI['id'])
+            features.append(AMI)
+        for line in data['lines']:
+            features.append(line)
 
-        for meter in meter_objs:
-            features.append(meter.to_geojson())
-        
-        for line in line_objs:
-            features.append(line.to_geojson())
-
-        
-
-        # Show all substations
-        # features = []
-
-        # for substation in data['substations']:
-        #     features.append(substation)
-        # for AMI in data['AMIs']:
-        #     features.append(AMI)
-        # for line in data['lines']:
-        #     features.append(line)
-
-        # print(line)
-        
         geojson = {"type": "FeatureCollection",
                    "features": features}
         
-        return GeoJSONResult(geojson)
+        my_interaction_groups = {
+            'connections' : connections
+        }
+        
+        return GeoJSONResult(geojson, interaction_groups=my_interaction_groups)
     
     @PlotlyView('Aggregated Load Profile', duration_guess=10)
     def get_plotly_view_2(self, params, **kwargs):
