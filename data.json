@@ -10,7 +10,7 @@
                 ]
             },
             "properties": {
-                "name": "Castries Substation",
+            "name": "Castries Substation",
                 "loads": [],
                 "title": "Castries Substation",
                 "icon":"square-filled",
@@ -29,7 +29,7 @@
                 ]
             },
             "properties": {
-                "AMI_id": "1231",
+                "asset_id": "1231",
                 "customer_type": "Household",
                 "marker-color": "#4169E1",
                 "icon":"circle-filled",
@@ -438,7 +438,7 @@
                 ]
             },
             "properties": {
-                "AMI_id": "1232",
+                "asset_id": "1232",
                 "customer_type": "Household",
                 "marker-color": "#4169E1",
                 "icon":"circle-filled",
@@ -847,7 +847,7 @@
                 ]
             },
             "properties": {
-                "AMI_id": "1233",
+                "asset_id": "1233",
                 "customer_type": "Household",
                 "marker-color": "#4169E1",
                 "icon":"circle-filled",
@@ -1256,7 +1256,7 @@
                 ]
             },
             "properties": {
-                "AMI_id": "1234",
+                "asset_id": "1234",
                 "customer_type": "Commercial",
                 "marker-color": "#2F4F4F",
                 "icon":"circle-filled",
@@ -1665,7 +1665,7 @@
                 ]
             },
             "properties": {
-                "AMI_id": "1235",
+                "asset_id": "1235",
                 "customer_type": "Industrial",
                 "marker-color": "#708090",
                 "icon":"circle-filled",
@@ -2120,8 +2120,8 @@
                 ]
             },
             "properties": {
-                "substation": "Castries Substation",
-                "AMI": "1231",
+                "start_node": "Castries Substation",
+                "end_node": "1231",
                 "stroke": "#939393",
                 "gap-size": 2
             }
@@ -2142,8 +2142,8 @@
                 ]
             },
             "properties": {
-                "substation": "Castries Substation",
-                "AMI": "1232",
+                "start_node": "Castries Substation",
+                "end_node": "1232",
                 "stroke": "#939393",
                 "gap-size": 2
             }

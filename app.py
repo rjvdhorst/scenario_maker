@@ -21,6 +21,7 @@ from viktor.parametrization import (
 from pathlib import Path
 from io import BytesIO
 from viktor import ViktorController, Color
+import os
 
 from viktor.views import (
     PlotlyView,
@@ -47,14 +48,58 @@ import pickle
 from plotly.subplots import make_subplots
 from statistics import mean
 
+from thpl import database
+from thpl.energy_assets import Substation, Meter, Transformer
+from datetime import datetime
+
+
+api_key = os.getenv("MONGO_API_WEB")
+base_url = "https://eu-west-2.aws.data.mongodb-api.com/app/data-vjefvhb/endpoint/data/v1"
+
+data_connection = database.get_database_connector(
+    'mongodb',
+    connection_uri=base_url,
+    db_name='geoWEB_demo',
+    collection_name='geoWEB_demo_assets',
+    user='geoWEB',
+    api_key=api_key
+)
+
+database.DatabaseManager.initialize(data_connection)
+
+my_connection = database.DatabaseManager.get_instance()
 
 def list_substations(**kwargs):
-    data = db.open_database()
-    substations = data['substations']
+    """Get list of all substation names."""
+    # db = DatabaseManager.get_instance()
+    substations = db.find_many({
+        'properties.type': 'substation'
+    })
+    return [sub['properties']['id'] for sub in substations] or ['No substations']
+
+
+def list_substations(**kwargs):
+    substations = db.find_many({"type": "substation"})
     if not substations:
         return ['No substations']
-    substation_names = [substation['properties']['name'] for substation in substations] # Extract the name from each substation
-    return substation_names
+    return [sub['asset_id'] for sub in substations]  # Changed from 'name' to 'asset_id'
+
+
+
+def list_connected_loads(params, **kwargs):
+    substation_name = params.page_3.section_2.substation_name
+    substation = db.find_entry({"asset_id": substation_name, "type": "substation"})
+    if substation is not None:
+        return [load['name'] for load in substation.get('loads', [])]
+    return []
+
+# def list_substations(**kwargs):
+#     data = db.open_database()
+#     substations = data['substations']
+#     if not substations:
+#         return ['No substations']
+#     substation_names = [substation['properties']['name'] for substation in substations] # Extract the name from each substation
+#     return substation_names
 
 def list_base_profiles(**kwargs):
     return ph.LoadProfile.list_names()
@@ -63,13 +108,13 @@ def list_customer_profiles(**kwargs):
     customer_dict = ph.LoadProfile.all_customer_profiles()
     return [profile['name'] for profile in customer_dict]
 
-def list_connected_loads(params, **kwargs):
-    substation_name = params.page_3.section_2.substation_name
-    substation = db.Substation.get_substation_by_name(substation_name)
-    if substation is not None:
-        return [load['name'] for load in substation.loads]
-    else:
-        return []
+# def list_connected_loads(params, **kwargs):
+#     substation_name = params.page_3.section_2.substation_name
+#     substation = db.Substation.get_substation_by_name(substation_name)
+#     if substation is not None:
+#         return [load['name'] for load in substation.loads]
+#     else:
+#         return []
 
 def list_column_names(params, **kwargs):
     if params["page_0"]["tab_train"]["file"]:
@@ -233,9 +278,9 @@ class Parametrization(ViktorParametrization):
     # step_1.section_1.substation_location = GeoPointField('#### Location')
     # step_1.section_1.add_button = ActionButton('Add to Database', flex=100, method='add_substation')
 
-    # step_1.section_2 = Section("Add AMI", description="Add an AMI to the database")
-    # step_1.section_2.ami_id = TextField('AMI ID', flex=50)
-    # step_1.section_2.ami_location = GeoPointField('Location')
+    # step_1.section_2 = Section("Add Connection", description="Add a connection to the database")
+    # step_1.section_2.connection_id = TextField('Conncetion ID', flex=50)
+    # step_1.section_2.connection_location = GeoPointField('Location')
     # step_1.section_2.customer_type = OptionField('Customer Type', options=['Household', 'Industrial', 'Commercial'], flex=50)
     # step_1.section_2.substation = OptionField('Substation', options=list_substations(), flex=50)
     # step_1.section_2.add_button = ActionButton('Add to Database', flex=100, method='add_ami')
@@ -271,7 +316,7 @@ class Parametrization(ViktorParametrization):
     page_3 = Page("Energy Landscape Builder", views=['get_map_view_1', 'get_plotly_view_2', 'substation_load_overview'])
     
     page_3.section_0 = Section("Select Substation")
-    page_3.section_0.substation_name = OptionField("Substation", options=list_substations(), flex=50)
+    page_3.section_0.substation_name = OptionField("Substation", options=['253166'], flex=50)
 
     page_3.section_1 = Section("Load Growth", description="Assign a load growth factor to each customer group for the selected substation.")
     page_3.section_1.text_1 = Text("""To carefully predict the load on the substation, a different load growth factor can be assigned to each customer group.""")
@@ -338,8 +383,6 @@ class Controller(ViktorController):
             pickle.dump(model, f)
         
         db.add_model(
-            
-
             params["page_0"]["tab_train"]["model_name"],
             params["page_0"]["tab_train"]["target"],
             list(X.columns),
@@ -360,11 +403,11 @@ class Controller(ViktorController):
         db.Substation(name, location).save_substation()
 
     def add_ami(self, params, **kwargs):
-        ami_id = params['step_1']['section_2']['ami_id']
-        location = (params['step_1']['section_2']['ami_location'].lat, params['step_1']['section_2']['ami_location'].lon)
+        connection_id = params['step_1']['section_2']['connection_id']
+        location = (params['step_1']['section_2']['connection_location'].lat, params['step_1']['section_2']['connection_location'].lon)
         customer_type = params['step_1']['section_2']['customer_type']
         substation = params['step_1']['section_2']['substation']
-        db.AMI(ami_id, location, customer_type, substation).save_AMI()
+        db.AMI(connection_id, location, customer_type, substation).save_AMI()
 
     def remove_substation(self, params, **kwargs):
         name = params['step_1']['section_3']['substation_name']
@@ -638,21 +681,47 @@ class Controller(ViktorController):
     
     @GeoJSONView('Energy Landscape Overview', duration_guess=2)
     def get_map_view_1(self, params, **kwargs):
+        
+        trafo_id = str(params.page_3.section_0.substation_name)
+        query = {'properties.id': trafo_id}
+        trafo = my_connection.find_entry(query)
 
-        data = db.open_database()
+        print(trafo['properties']['id'])
+
+        trafo = Transformer(
+            asset_id=trafo['properties']['id'],
+            creation_date=datetime.now(),
+            location=(trafo['geometry']['coordinates'][0], trafo['geometry']['coordinates'][1]),
+            voltage_in=1000,
+            voltage_out=400,
+            substation_id=123,
+            rated_power =1000)
+        
+        meter_objs, line_objs = trafo.get_connections()
+        features = []
+        
+        features.append(trafo.to_geojson())
+
+        for meter in meter_objs:
+            features.append(meter.to_geojson())
+        
+        for line in line_objs:
+            features.append(line.to_geojson())
+
+        
 
         # Show all substations
-        features = []
+        # features = []
 
-        for substation in data['substations']:
-            features.append(substation)
-        for AMI in data['AMIs']:
-            features.append(AMI)
-        for line in data['lines']:
-            features.append(line)
+        # for substation in data['substations']:
+        #     features.append(substation)
+        # for AMI in data['AMIs']:
+        #     features.append(AMI)
+        # for line in data['lines']:
+        #     features.append(line)
 
-        print(line)
-
+        # print(line)
+        
         geojson = {"type": "FeatureCollection",
                    "features": features}
         
