@@ -1,3 +1,5 @@
+from viktor import ViktorController, Color
+
 from viktor.parametrization import (
     ViktorParametrization,
     TextField,
@@ -18,9 +20,6 @@ from viktor.parametrization import (
     LineBreak,
     MultiSelectField, FileField, ActionButton, SetParamsButton, Page, MapSelectInteraction
 )
-from pathlib import Path
-from io import BytesIO
-from viktor import ViktorController, Color
 
 from viktor.views import (
     PlotlyView,
@@ -33,20 +32,42 @@ from viktor.views import (
 from viktor.errors import UserError
 from viktor.result import SetParamsResult
 
-import plotly.graph_objects as go
 import db_helpers as db
 import load_profiles as ph
 
+from pathlib import Path
+from io import BytesIO
 import pandas as pd
+import numpy
+import pickle
+from statistics import mean
+
+from thpl import database
+from thpl.sim_objects import BaseProfile, LoadProfile
+
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
 from sklearn.model_selection import train_test_split 
 from sklearn.linear_model import LinearRegression 
 from sklearn.metrics import mean_squared_error, mean_absolute_error 
 from sklearn import preprocessing
-import numpy
-import pickle
-from plotly.subplots import make_subplots
-from statistics import mean
 
+####
+####
+
+api_key = "CEIBq9jiGsEaHSGTl1qRIJHRAkV42jSHRDcZVmGCcz3tQc12tPVVHGCzGJEZiSnp"
+base_url = "https://eu-west-2.aws.data.mongodb-api.com/app/data-vjefvhb/endpoint/data/v1"
+
+data_connection = database.MongoDB.MongoDBDatabaseConnector(
+    base_url = base_url,
+    db_name='geoWEB_demo',
+    collection_name='geoWEB_demo_simobjects',
+    data_source ='geoWEB'
+)
+
+database.DatabaseManager.initialize(data_connection)
+my_connection = database.DatabaseManager.get_instance()
 
 def list_substations(**kwargs):
     data = db.open_database()
@@ -57,7 +78,10 @@ def list_substations(**kwargs):
     return substation_names
 
 def list_base_profiles(**kwargs):
-    return ph.LoadProfile.list_names()
+    query = {"type": "BaseProfile"}
+    query_results = my_connection.find_many(query)
+    base_profiles = [base_profile['profile_id'] for base_profile in query_results]
+    return base_profiles
 
 def list_customer_profiles(**kwargs):
     customer_dict = ph.LoadProfile.all_customer_profiles()
@@ -284,16 +308,15 @@ class Parametrization(ViktorParametrization):
     step_2 = Page("Load Profile Manager", views=["get_plotly_view_1",'plotly_new_load_profile'])
     
     step_2.section_3 = Section("View Base Load Profile")
-    step_2.section_3.select_load_profile = OptionField("Select Base Load Profile", options=list_base_profiles(), default='Household', flex=50)
+    step_2.section_3.select_base_profile = OptionField("", options=list_base_profiles(), flex=50)
     
-    step_2.section_1 = Section("Create Customer Group", description="Customize the specified load profiles. ")
+    step_2.section_1 = Section("Create Load Profile for a Customer Type")
     step_2.section_1.intro = Text("""Create load profiles for different customer types. Specify the name, peak load, and base profile. The base profile is a predefined profile that can be scaled to the peak load.""")
-
     step_2.section_1.dynamic_array_1 = DynamicArray("")
-    step_2.section_1.dynamic_array_1.profile_name = TextField("Name", flex=33)
-    step_2.section_1.dynamic_array_1.peak_load = NumberField("Peak Load", suffix='KW', flex=33)
+    step_2.section_1.dynamic_array_1.profile_name = TextField("Profile Name", flex=33)
+    step_2.section_1.dynamic_array_1.peak_load = NumberField("Peak Load", suffix='kW', flex=33)
     step_2.section_1.dynamic_array_1.base_profile = OptionField("Base Load Profile", options=list_base_profiles(), flex=33)
-    step_2.section_1.normalize_button = ActionButton('Add to database', flex=100, method='add_load_profile')
+    step_2.section_1.normalize_button = ActionButton('Add to DataBase', flex=100, method='add_load_profile')
 
     step_2.section_2 = Section("Add Base Load Profiles")
     step_2.section_2.introtext = Text("A Base Load Profile can be configured by filling the table below. Note that the profile is a normalized profile. A value of 1 is equal to the peak load that will be assigned to the profile in a next step.")
@@ -412,10 +435,16 @@ class Controller(ViktorController):
 
     def add_load_profile(self, params, **kwargs):
         data = params['step_2']['section_1']['dynamic_array_1']
+        
         for profile in data:
-            load = ph.LoadProfile(profile['profile_name'], profile['peak_load'], profile['base_profile'])
-            load.save_profile()
-
+            query = {"profile_id": profile['base_profile']}
+            qr = my_connection.find_entry(query)
+            bp = BaseProfile(qr['profile_id'], qr['profile'],qr['customer_type'])
+            lp = LoadProfile(profile['profile_name'],bp.make_loadprofile(profile['peak_load']))
+            dict_db = vars(lp)
+            dict_db['type'] = "LoadProfile"
+            my_connection.add_entry(dict_db)
+            
     def connect_load(self, params, **kwargs):
         substation_name = params['page_3']['section_0']['substation_name']
         data = params['page_3']['section_1']['dynamic_array_1']
@@ -458,8 +487,6 @@ class Controller(ViktorController):
             time_array.append({'time': entry['time'], 'value': entry['value']})
 
         ph.BaseProfile.save_base_profile(time_array, profile_name)
-
-
 
 
     @staticmethod
@@ -606,21 +633,21 @@ class Controller(ViktorController):
     
     @PlotlyView('Selected Base Load Profile', duration_guess=1)
     def get_plotly_view_1(self, params, **kwargs):
-        profile_name = params['step_2']['section_3']['select_load_profile']
-
-        if profile_name == None:
-            profile_name = 'Household'
+        profile_id = params['step_2']['section_3']['select_base_profile']
         
-        profile  = ph.BaseProfile(profile_name).load_profile_data()
+        query = {"profile_id": profile_id}
+        query_result = my_connection.find_entry(query)
 
-        time = [entry['time'] for entry in profile['time_array']]
-        values = [entry['value'] for entry in profile['time_array']]
+        profile = query_result['profile']
+
+        time = list(profile.keys())
+        values = list(profile.values())
 
         fig = go.Figure()
         fig.add_trace(go.Bar(x=time, y=values, name='Load'))
         
         fig.update_layout(
-            title= profile['name'] + ' - Load Profile',
+            title= profile_id + ' - Base Load Profile',
             xaxis_title='Hour of the Day',
             yaxis_title='Normalized Load',
             xaxis=dict(
@@ -640,7 +667,7 @@ class Controller(ViktorController):
 
     @PlotlyView('New Base Load Profile', duration_guess=1)
     def plotly_new_load_profile(self, params, **kwargs):
-        profile_name = params['step_2']['section_3']['select_load_profile']
+        profile_name = params['step_2']['section_3']['select_base_profile']
 
         if profile_name == None:
             profile_name = 'Industrial'
