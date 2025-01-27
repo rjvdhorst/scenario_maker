@@ -36,7 +36,7 @@ from viktor.result import SetParamsResult
 
 import plotly.graph_objects as go
 # import db_helpers as db
-import load_profiles as ph
+# import load_profiles as ph
 
 import pandas as pd
 from sklearn.model_selection import train_test_split 
@@ -48,74 +48,73 @@ import pickle
 from plotly.subplots import make_subplots
 from statistics import mean
 
-from thpl import database
+from thpl.database import DatabaseConnectionManager
 from thpl.energy_assets import Substation, Meter, Transformer
+from thpl.sim_objects import LoadProfile, BaseProfile
 from datetime import datetime
 
 
 api_key = os.getenv("MONGO_API_WEB")
 base_url = "https://eu-west-2.aws.data.mongodb-api.com/app/data-vjefvhb/endpoint/data/v1"
 
-data_connection = database.get_database_connector(
-    'mongodb',
-    connection_uri=base_url,
-    db_name='geoWEB_demo',
-    collection_name='geoWEB_demo_assets',
-    user='geoWEB',
-    api_key=api_key
+asset_connection = DatabaseConnectionManager.get_connector(
+    connector_type='mongodb',
+    base_url=base_url,
+    db_name="geoWEB_demo",
+    collection_name="geoWEB_demo_assets",
+    data_source="geoWEB",
+    headers={
+        "Content-Type": "application/json",
+        "Access-Control-Request-Headers": "*",
+        "api-key": api_key,
+    },
 )
 
-database.DatabaseManager.initialize(data_connection)
+sim_obj_connection = DatabaseConnectionManager.get_connector(
+    connector_type='mongodb',
+    base_url=base_url,
+    db_name="geoWEB_demo",
+    collection_name="geoWEB_demo_simobjects",
+    data_source="geoWEB",
+    headers={
+        "Content-Type": "application/json",
+        "Access-Control-Request-Headers": "*",
+        "api-key": api_key,
+    })
 
-my_connection = database.DatabaseManager.get_instance()
+# database.DatabaseManager.initialize(asset_connection)
+
+
+# my_connection = database.DatabaseManager.get_instance()
 
 
 def list_substations(**kwargs):
     """Get list of all substation names."""
     # db = DatabaseManager.get_instance()
-    substations = db.find_many({
+    substations = asset_connection.find_many({
         'properties.type': 'substation'
     })
     return [sub['properties']['id'] for sub in substations] or ['No substations']
 
-
-# def list_substations(**kwargs):
-#     substations = db.find_many({"type": "substation"})
-#     if not substations:
-#         return ['No substations']
-#     return [sub['asset_id'] for sub in substations]  # Changed from 'name' to 'asset_id'
-
-
-
 def list_connected_loads(params, **kwargs):
     substation_name = params.page_3.section_2.substation_name
-    substation = db.find_entry({"asset_id": substation_name, "type": "substation"})
-    if substation is not None:
-        return [load['name'] for load in substation.get('loads', [])]
+    trafo = Transformer.by_id(substation_name)
+
+    if trafo is not None:
+        meter_objs, line_objs = trafo.get_connections()  
+        return [meter.asset_id for meter in meter_objs] 
+    
     return []
 
-# def list_substations(**kwargs):
-#     data = db.open_database()
-#     substations = data['substations']
-#     if not substations:
-#         return ['No substations']
-#     substation_names = [substation['properties']['name'] for substation in substations] # Extract the name from each substation
-#     return substation_names
-
 def list_base_profiles(**kwargs):
-    return ph.LoadProfile.list_names()
+    result = sim_obj_connection.find_many({'type': 'BaseProfile'})
+    result = list(set([entry['profile_id'] for entry in result]))
+    return result
 
 def list_customer_profiles(**kwargs):
-    customer_dict = ph.LoadProfile.all_customer_profiles()
-    return [profile['name'] for profile in customer_dict]
-
-# def list_connected_loads(params, **kwargs):
-#     substation_name = params.page_3.section_2.substation_name
-#     substation = db.Substation.get_substation_by_name(substation_name)
-#     if substation is not None:
-#         return [load['name'] for load in substation.loads]
-#     else:
-#         return []
+    result = sim_obj_connection.find_many({'type': 'BaseProfile'})
+    result = list(set([entry['customer_type'] for entry in result]))
+    return result
 
 def list_column_names(params, **kwargs):
     if params["page_0"]["tab_train"]["file"]:
@@ -127,148 +126,159 @@ def list_column_names(params, **kwargs):
         return []
 
 def create_default_content():
-    load_profile = ph.LoadProfile.find_load_profile('Industrial')
-    default_content = load_profile.profile_dict()
-    default_array = default_content['time_array']
-    return 
+    result = sim_obj_connection.find_many({'type': 'LoadProfile'})
+    default_content = []
+    result = result[1]['profile']
+    for key, value in result.items():
+        default_content.append({'time': key, 'value': value})
+    return default_content
     
 def aggregated_load_profiles(params, **kwargs):
+    """
+    Aggregates all profiles (customer, solar, EV charging, and load growth) into a single dictionary.
+    """
     time_intervals, customer_profiles = customer_load_profiles(params)
     solar_profile = solar_profiles(params)
     ev_profile = EV_charging_profiles(params)
     potential_load = customer_load_growth(params)
-    aggregated_profiles = {}
-    aggregated_profiles['time_array'] = time_intervals 
+
+    aggregated_profiles = {"time_array": time_intervals}
+
     aggregated_profiles.update(customer_profiles)
     aggregated_profiles.update(ev_profile)
     aggregated_profiles.update(potential_load)
     aggregated_profiles.update(solar_profile)
-    
     return aggregated_profiles
 
 
-
-
 def EV_charging_profiles(params, **kwargs):
-    data = params['page_3']['section_3']['array']
+    """
+    Generates EV charging profiles (slow, fast, and ultra-fast) based on the provided parameters.
+    """
+    data = params["page_3"]["section_3"]["array"]
     aggregated_profiles = {}
 
     for entry in data:
-        number_of_chargers = entry['number']
+        number_of_chargers = entry["number"]
         power = 0
 
-        if entry['type'] == 'Slow (7 KW)':
+        if entry["type"] == "Slow (7 KW)":
             power = 7
-            slow_profile = ph.LoadProfile('Slow', power, 'EV - Daily Charge - 5 PM').scale_profile()
-            aggregated_profiles['Slow Charging'] = [0] * 96
-            for i, entry in enumerate(slow_profile['time_array']):
-                aggregated_profiles['Slow Charging'][i] = entry['value']*number_of_chargers
-        
-        elif entry['type'] == 'Public Fast (22 KW)':
-            power = 22
-            fast_profile = ph.LoadProfile('Fast', power, 'Public Fast Charger').scale_profile()
-            aggregated_profiles['Fast Charging'] = [0] * 96
-            for i, entry in enumerate(fast_profile['time_array']):
-                aggregated_profiles['Fast Charging'][i] = entry['value']*number_of_chargers
+            slow_profile = LoadProfile("Slow", power, "EV - Daily Charge - 5 PM")
+            aggregated_profiles["Slow Charging"] = slow_profile.scale_profile().get_loadlist()
+            aggregated_profiles["Slow Charging"] = [
+                value * number_of_chargers for value in aggregated_profiles["Slow Charging"]
+            ]
 
-        elif entry['type'] == 'Public Ultra Fast (70 KW)':
+        elif entry["type"] == "Public Fast (22 KW)":
+            power = 22
+            fast_profile = LoadProfile("Fast", power, "Public Fast Charger")
+            aggregated_profiles["Fast Charging"] = fast_profile.scale_profile().get_loadlist()
+            aggregated_profiles["Fast Charging"] = [
+                value * number_of_chargers for value in aggregated_profiles["Fast Charging"]
+            ]
+
+        elif entry["type"] == "Public Ultra Fast (70 KW)":
             power = 70
-            aggregated_profiles['Ultra Fast Charging'] = [0] * 96
-            ultra_fast_profile = ph.LoadProfile('Ultra Fast', power, 'Public Ultra Fast Charger').scale_profile()
-            for i, entry in enumerate(ultra_fast_profile['time_array']):
-                aggregated_profiles['Ultra Fast Charging'][i] = entry['value']*number_of_chargers
+            ultra_fast_profile = LoadProfile("Ultra Fast", power, "Public Ultra Fast Charger")
+            aggregated_profiles["Ultra Fast Charging"] = ultra_fast_profile.scale_profile().get_loadlist()
+            aggregated_profiles["Ultra Fast Charging"] = [
+                value * number_of_chargers for value in aggregated_profiles["Ultra Fast Charging"]
+            ]
+
     return aggregated_profiles
 
 
 def customer_load_profiles(params, **kwargs):
-    substation_name = params['page_3']['section_0']['substation_name']
-    substation = db.Substation.get_substation_by_name(substation_name)
-    connected_amis = substation.get_connected_AMIs()
+    """
+    Aggregates customer load profiles from connected meters.
+    """
+    substation_name = params["page_3"]["section_0"]["substation_name"]
+    trafo = Transformer.by_id(asset_connection, substation_name)
+    meter_objs, _ = trafo.get_connections(asset_connection)
 
     aggregated_profiles = {}
+    load_profile_list = [LoadProfile.from_meter(profile_id=meter.connection_type, database=sim_obj_connection, power_rating=meter.get_power_rating(), customer_type=meter.connection_type) for meter in meter_objs]
 
-    time_intervals = [entry['time'] for entry in connected_amis[0]['properties']['load']['time_array']]
+    time_intervals = list(load_profile_list[0].profile.keys())
 
-    for ami in connected_amis:
-        customer_type = ami['properties']['customer_type']
-        if customer_type not in aggregated_profiles:
-            aggregated_profiles[customer_type] = [0] * len(time_intervals)
-
-        for i, entry in enumerate(ami['properties']['load']['time_array']):
-            aggregated_profiles[customer_type][i] += entry['value']
-
+    for profile in load_profile_list:
+        if profile.profile_id not in aggregated_profiles:
+            aggregated_profiles[profile.profile_id] = profile.get_loadlist()
+        else:
+            aggregated_profiles[profile.profile_id] = [
+                x + y for x, y in zip(aggregated_profiles[profile.profile_id], profile.get_loadlist())
+            ]
     return time_intervals, aggregated_profiles
 
 
 def customer_load_growth(params, **kwargs):
-    data = params['page_3']['section_1']['table']
-
-    time_invervals, customers_aggregated_load = customer_load_profiles(params)
-    
+    """
+    Calculates potential customer load growth.
+    """
+    data = params["page_3"]["section_1"]["table"]
+    time_intervals, customers_aggregated_load = customer_load_profiles(params)
     potential_load = {}
 
     for entry in data:
-        customer_type = entry['customer_type']
-        customer_key = 'Load Growth - ' + customer_type
-        load_growth_factor = entry['lgf']*0.01
-        potential_load[customer_key] = [0] * len(time_invervals)
-        for i, entry in enumerate(customers_aggregated_load[customer_type]):
-            potential_load[customer_key][i] = entry * (load_growth_factor)
+        customer_type = entry["customer_type"]
+        customer_key = f"Load Growth - {customer_type}"
+        load_growth_factor = entry["lgf"] * 0.01
+
+        potential_load[customer_key] = [
+            value * load_growth_factor for value in customers_aggregated_load[customer_type]
+        ]
 
     return potential_load
 
 
 def solar_profiles(params, **kwargs):
-    substation_name = params['page_3']['section_0']['substation_name']
-    data = params['page_3']['section_2']['solar_array']
-    substation = db.Substation.get_substation_by_name(substation_name)
+    """
+    Generates solar profiles based on the transformer and provided parameters.
+    """
+    trafo_name = params["page_3"]["section_0"]["substation_name"]
+    data = params["page_3"]["section_2"]["solar_array"]
+    trafo = Transformer.by_id(asset_connection, trafo_name)
 
-    peak_load = 0
-    
-    aggregated_profiles = {}
-    
     if not data:
-        aggregated_profiles['Solar'] = [0] * 96
-        return aggregated_profiles
-    
+        return {"Solar": [0] * 96}
+
+    aggregated_profiles = {"Solar": [0] * 96}
+
+    total_peak_load = 0
+
     for entry in data:
-        if not entry['percentage']:
-            aggregated_profiles['Solar'] = [0] * 96
-            return aggregated_profiles
-        if not entry['peak_load']:
-            aggregated_profiles['Solar'] = [0] * 96
-            return aggregated_profiles
-    
-    for entry in data:
-        customer_group = entry['customer_group']
-        number_of_customers = 0
-        percentage = entry['percentage']*0.01
-        number_of_panels = entry['peak_load']
+        if not entry.get("percentage") or not entry.get("peak_load"):
+            return {"Solar": [0] * 96}
 
-        for ami in substation.get_connected_AMIs():
-            if ami['properties']['customer_type'] == customer_group:
-                number_of_customers += 1
-        
-        print(number_of_customers)
-        
-        peak_load += number_of_customers * percentage * number_of_panels * 0.5
+        customer_group = entry["customer_group"]
+        percentage = entry["percentage"] * 0.01
+        peak_load_per_customer = entry["peak_load"]
+        meter_objs, _ = trafo.get_connections(asset_connection)
+        customer_count = sum(
+            1 for meter in meter_objs if meter.connection_type == customer_group
+        )
+        total_peak_load += customer_count * percentage * peak_load_per_customer * 0.5
 
-    peak_load = round(peak_load, 1)
-    solar_profile = ph.LoadProfile('Solar', peak_load, 'Solar_array').scale_profile()
-    aggregated_profiles['Solar'] = [0] * 96
+    total_peak_load = round(total_peak_load, 1)
 
-    for i, entry in enumerate(solar_profile['time_array']):
-        aggregated_profiles['Solar'][i] -= entry['value']
+    print(total_peak_load)
+    solar_profile = LoadProfile.for_solar("residential", total_peak_load, sim_obj_connection)
+    aggregated_profiles["Solar"] = [-value for value in solar_profile.get_loadlist()]
 
-    if aggregated_profiles['Solar'] == [0]*96:
-        return {}
     return aggregated_profiles
 
+
 def solar_peak_load(params, **kwargs):
-    if solar_profiles(params) == {}:
+    """
+    Returns the peak load for solar profiles or a placeholder if unavailable.
+    """
+    solar_profile = solar_profiles(params)
+    if solar_profile == {"Solar": [0] * 96}:
         return "Calculating..."
     else:
-        return -1*min(solar_profiles(params)['Solar'])
+        return -min(solar_profile["Solar"])
+
 
 class Parametrization(ViktorParametrization):
     # step_1 = Step("Manage Substations/Transformers", views=["get_map_view_1"], enabled=False)
@@ -308,7 +318,7 @@ class Parametrization(ViktorParametrization):
     page_3.section_1 = Section("Load Growth", description="Assign a load growth factor to each customer group for the selected substation.")
     page_3.section_1.text_1 = Text("""To carefully predict the load on the substation, a different load growth factor can be assigned to each customer group.""")
     page_3.section_1.table = DynamicArray("")
-    page_3.section_1.table.customer_type = OptionField("Customer Group", options=['Household', 'Industrial', 'Commercial'], flex=50)
+    page_3.section_1.table.customer_type = OptionField("Customer Group", options=list_customer_profiles(), flex=50)
     page_3.section_1.table.lgf = IntegerField("Load Growth (%)", description="Define how many customers of this type are connected.", flex=50)
 
     # page_3.section_1.connect_button = SetParamsButton('Connect', flex=100, method='connect_load')
@@ -316,7 +326,7 @@ class Parametrization(ViktorParametrization):
     page_3.section_2 = Section("Rooftop Solar", description="Assign a peak power production load to substation, based on the number of solar panels installed.")
     page_3.section_2.intro = Text('This section allows you to add and simulate the impact of rooftop solar panels on the substation.')
     page_3.section_2.solar_array = DynamicArray("")
-    page_3.section_2.solar_array.customer_group = OptionField('Customer Group', options=['Household', 'Industrial', 'Commercial'], flex=50)
+    page_3.section_2.solar_array.customer_group = OptionField('Customer Group', options=list_customer_profiles(), flex=50)
     page_3.section_2.solar_array.percentage = NumberField('% of Customers', description='Give the', flex=50, variant='slider', min=0, max=100, step=5)
     page_3.section_2.solar_array.peak_load = NumberField('Number of Panels (500 Wp)', flex=100)
     page_3.section_2.max_solar_load = OutputField('Installed Capacity', suffix='kWp', value=solar_peak_load,  flex=50)
@@ -332,11 +342,10 @@ class Parametrization(ViktorParametrization):
     step_2 = Page("Load Profile Manager", views=["get_plotly_view_1",'plotly_new_load_profile'])
     
     step_2.section_3 = Section("View Base Load Profile")
-    step_2.section_3.select_load_profile = OptionField("Select Base Load Profile", options=list_base_profiles(), default='Household', flex=50)
+    step_2.section_3.select_load_profile = OptionField("Select Base Load Profile", options=list_base_profiles(), default='Residential 1', flex=50)
     
     step_2.section_1 = Section("Create Customer Group", description="Customize the specified load profiles. ")
     step_2.section_1.intro = Text("""Create load profiles for different customer types. Specify the name, peak load, and base profile. The base profile is a predefined profile that can be scaled to the peak load.""")
-
     step_2.section_1.dynamic_array_1 = DynamicArray("")
     step_2.section_1.dynamic_array_1.profile_name = TextField("Name", flex=33)
     step_2.section_1.dynamic_array_1.peak_load = NumberField("Peak Load", suffix='KW', flex=33)
@@ -353,22 +362,22 @@ class Parametrization(ViktorParametrization):
 
     ###
     
-    page_0 = Page("Load Growth Estimator", views = ["get_table_view", "get_data_view", "get_predict_view", "get_forecast_view"], width=30)
+    # page_0 = Page("Load Growth Estimator", views = ["get_table_view", "get_data_view", "get_predict_view", "get_forecast_view"], width=30)
     
-    # TODO: Tab 0 Upload File
-    page_0.tab_train = Tab("[I] Train Model")
-    page_0.tab_train.file = FileField("Upload File", file_types=[".csv"], flex = 100)
-    page_0.tab_train.features = MultiSelectField('Select Features', options=list_column_names, flex=50)
-    page_0.tab_train.target = OptionField('Select Target', options=list_column_names, flex=50)
-    page_0.tab_train.testset = NumberField("Test Sample Size", min=0.2, max=0.5, step =0.1, variant='slider', flex =100)
-    page_0.tab_train.model_name = TextField("Model Name", flex=100)
-    page_0.tab_train.train = ActionButton("Train Model", method = 'train_model', flex=100)
+    # # TODO: Tab 0 Upload File
+    # page_0.tab_train = Tab("[I] Train Model")
+    # page_0.tab_train.file = FileField("Upload File", file_types=[".csv"], flex = 100)
+    # page_0.tab_train.features = MultiSelectField('Select Features', options=list_column_names, flex=50)
+    # page_0.tab_train.target = OptionField('Select Target', options=list_column_names, flex=50)
+    # page_0.tab_train.testset = NumberField("Test Sample Size", min=0.2, max=0.5, step =0.1, variant='slider', flex =100)
+    # page_0.tab_train.model_name = TextField("Model Name", flex=100)
+    # page_0.tab_train.train = ActionButton("Train Model", method = 'train_model', flex=100)
 
-    page_0.tab_evaluate = Tab("[II] Evaluate Model")
-    page_0.tab_evaluate.model_name = TextField('Model Name', flex = 100)
+    # page_0.tab_evaluate = Tab("[II] Evaluate Model")
+    # page_0.tab_evaluate.model_name = TextField('Model Name', flex = 100)
     
-    page_0.tab_forecast = Tab("[III] Forecast")
-    page_0.tab_forecast.model_name = TextField('Model Name', flex = 100)
+    # page_0.tab_forecast = Tab("[III] Forecast")
+    # page_0.tab_forecast.model_name = TextField('Model Name', flex = 100)
 
 
 class Controller(ViktorController):
@@ -459,7 +468,7 @@ class Controller(ViktorController):
     def add_load_profile(self, params, **kwargs):
         data = params['step_2']['section_1']['dynamic_array_1']
         for profile in data:
-            load = ph.LoadProfile(profile['profile_name'], profile['peak_load'], profile['base_profile'])
+            load = LoadProfile(profile['profile_name'], profile['peak_load'], profile['base_profile'])
             load.save_profile()
 
     def connect_load(self, params, **kwargs):
@@ -658,18 +667,21 @@ class Controller(ViktorController):
         profile_name = params['step_2']['section_3']['select_load_profile']
 
         if profile_name == None:
-            profile_name = 'Household'
+            profile_name = 'Residential 1'
         
-        profile  = ph.BaseProfile(profile_name).load_profile_data()
+        profile_dict = sim_obj_connection.find_entry({'profile_id': profile_name, 'type': 'BaseProfile'})
 
-        time = [entry['time'] for entry in profile['time_array']]
-        values = [entry['value'] for entry in profile['time_array']]
+        profile  = BaseProfile(profile_dict['profile_id'], profile_dict['profile'], profile_dict['customer_type'])
+        
+
+        time = [entry for entry in profile.profile_data.keys()]
+        values = [entry for entry in profile.profile_data.values()]
 
         fig = go.Figure()
         fig.add_trace(go.Bar(x=time, y=values, name='Load'))
         
         fig.update_layout(
-            title= profile['name'] + ' - Load Profile',
+            title= profile.profile_id + ' - Load Profile',
             xaxis_title='Hour of the Day',
             yaxis_title='Normalized Load',
             xaxis=dict(
@@ -726,29 +738,28 @@ class Controller(ViktorController):
         
         trafo_id = str(params.page_3.section_0.substation_name)
         query = {'properties.id': trafo_id}
-        trafo = my_connection.find_entry(query)
-        print(trafo)
-        print(trafo['properties']['id'])
+        trafo = Transformer.by_id(asset_connection, trafo_id)
+        # print(trafo['properties']['id'])
 
-        trafo = Transformer(
-            asset_id=trafo['properties']['id'],
-            creation_date=datetime.now(),
-            location=(trafo['geometry']['coordinates'][0], trafo['geometry']['coordinates'][1]),
-            voltage_in=1000,
-            voltage_out=400,
-            substation_id=123,
-            rated_power =1000)
+        # trafo = Transformer(
+        #     asset_id=trafo['properties']['id'],
+        #     creation_date=datetime.now(),
+        #     location=(trafo['geometry']['coordinates'][0], trafo['geometry']['coordinates'][1]),
+        #     voltage_in=1000,
+        #     voltage_out=400,
+        #     substation_id=123,
+        #     rated_power =1000)
         
-        meter_objs, line_objs = trafo.get_connections()
+        meter_objs, line_objs = trafo.get_connections(asset_connection)
         features = []
         
         features.append(trafo.to_geojson())
 
         for meter in meter_objs:
             features.append(meter.to_geojson())
-        
+
         for line in line_objs:
-            features.append(line.to_geojson())
+            features.append(line.to_geojson(asset_connection))
 
         
 
@@ -782,12 +793,12 @@ class Controller(ViktorController):
 
         # Define color scheme
         color_map = {
-            'Household': 'rgb(4, 118, 208)',  # Blue for Household
-            'Load Growth - Household': 'rgba(4, 118, 208, 0.5)',  # Lighter blue for potential growth
-            'Industrial': 'rgb(137, 207, 240)',  # DarkBlue for Industrial
-            'Load Growth - Industrial': 'rgba(137, 207, 240, 0.5)',  # Lighter for potential growth
-            'Commercial': 'rgb(0, 0, 139)',  # Orange for Commercial
-            'Load Growth - Commercial': 'rgba(0, 0, 139, 0.5)',  # Lighter orange for potential growth
+            'residential': 'rgb(4, 118, 208)',  # Blue for Household
+            'Load Growth - residential': 'rgba(4, 118, 208, 0.5)',  # Lighter blue for potential growth
+            'industrial': 'rgb(137, 207, 240)',  # DarkBlue for Industrial
+            'Load Growth - industrial': 'rgba(137, 207, 240, 0.5)',  # Lighter for potential growth
+            'commercial': 'rgb(0, 0, 139)',  # Orange for Commercial
+            'Load Growth - commercial': 'rgba(0, 0, 139, 0.5)',  # Lighter orange for potential growth
             'Slow Charging': 'rgb(148, 103, 189)',  # Purple for Slow Charging
             'Fast Charging': 'rgba(148, 103, 189, 0.75)',  # Medium purple for Fast Charging
             'Ultra Fast Charging': 'rgba(148, 103, 189, 0.5)',  # Lighter purple for Ultra Fast Charging
@@ -796,9 +807,9 @@ class Controller(ViktorController):
 
         # Define the order of layers
         layer_order = [
-            'Industrial', 'Load Growth - Industrial',
-            'Commercial', 'Load Growth - Commercial',
-            'Household', 'Load Growth - Household',  # Bottom layers
+            'residential', 'Load Growth - residential',
+            'commercial', 'Load Growth - commercial',
+            'industrial', 'Load Growth - industrial',  # Bottom layers
             'Slow Charging', 'Fast Charging', 'Ultra Fast Charging',  # EV Charging
             'Solar'  # Solar on top
         ]
