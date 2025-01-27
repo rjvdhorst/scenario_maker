@@ -56,7 +56,7 @@ from sklearn import preprocessing
 ####
 ####
 
-api_key = "CEIBq9jiGsEaHSGTl1qRIJHRAkV42jSHRDcZVmGCcz3tQc12tPVVHGCzGJEZiSnp"
+api_key = ""
 base_url = "https://eu-west-2.aws.data.mongodb-api.com/app/data-vjefvhb/endpoint/data/v1"
 
 data_connection = database.MongoDB.MongoDBDatabaseConnector(
