@@ -35,7 +35,7 @@ from viktor.errors import UserError
 from viktor.result import SetParamsResult
 
 import plotly.graph_objects as go
-import db_helpers as db
+# import db_helpers as db
 import load_profiles as ph
 
 import pandas as pd
@@ -69,6 +69,7 @@ database.DatabaseManager.initialize(data_connection)
 
 my_connection = database.DatabaseManager.get_instance()
 
+
 def list_substations(**kwargs):
     """Get list of all substation names."""
     # db = DatabaseManager.get_instance()
@@ -78,11 +79,11 @@ def list_substations(**kwargs):
     return [sub['properties']['id'] for sub in substations] or ['No substations']
 
 
-def list_substations(**kwargs):
-    substations = db.find_many({"type": "substation"})
-    if not substations:
-        return ['No substations']
-    return [sub['asset_id'] for sub in substations]  # Changed from 'name' to 'asset_id'
+# def list_substations(**kwargs):
+#     substations = db.find_many({"type": "substation"})
+#     if not substations:
+#         return ['No substations']
+#     return [sub['asset_id'] for sub in substations]  # Changed from 'name' to 'asset_id'
 
 
 
@@ -144,6 +145,8 @@ def aggregated_load_profiles(params, **kwargs):
     aggregated_profiles.update(solar_profile)
     
     return aggregated_profiles
+
+
 
 
 def EV_charging_profiles(params, **kwargs):
@@ -292,7 +295,7 @@ class Parametrization(ViktorParametrization):
     page_3 = Page("Energy Landscape Builder", views=['get_map_view_1', 'get_plotly_view_2', 'substation_load_overview'])
     
     page_3.section_0 = Section("Select Substation")
-    page_3.section_0.substation_name = OptionField("Substation", options=list_substations(), flex=50)
+    page_3.section_0.substation_name = OptionField("Substation", options=['253166'], flex=50)
 
     page_3.section_01 =           Section("Assign Profiles")
     page_3.section_01.selection = SetParamsButton("Select Customers",
@@ -460,13 +463,16 @@ class Controller(ViktorController):
             load.save_profile()
 
     def connect_load(self, params, **kwargs):
-        substation_name = params['page_3']['section_0']['substation_name']
+        substation_id = params['page_3']['section_0']['substation_name']
         data = params['page_3']['section_1']['dynamic_array_1']
+        
+
         for connection in data:
-            substation = db.Substation.get_substation_by_name(substation_name)
+            substation = my_connection.find_entry({'properties.id': substation_id})
+            # substation = db.Substation.get_substation_by_name(substation_name)
             
             if substation is None:
-                raise UserError(f"Substation {substation_name} not found")
+                raise UserError(f"Substation {substation_id} not found")
             
             num_connections = connection['num_connections']
             load = ph.LoadProfile.find_load_profile(connection['customer_type'])
@@ -721,7 +727,7 @@ class Controller(ViktorController):
         trafo_id = str(params.page_3.section_0.substation_name)
         query = {'properties.id': trafo_id}
         trafo = my_connection.find_entry(query)
-
+        print(trafo)
         print(trafo['properties']['id'])
 
         trafo = Transformer(
@@ -735,24 +741,34 @@ class Controller(ViktorController):
         
         meter_objs, line_objs = trafo.get_connections()
         features = []
-        connections = []
         
-        for substation in data['substations']:
-            features.append(substation)
-        for AMI in data['AMIs']:
-            connections.append(AMI['id'])
-            features.append(AMI)
-        for line in data['lines']:
-            features.append(line)
+        features.append(trafo.to_geojson())
 
+        for meter in meter_objs:
+            features.append(meter.to_geojson())
+        
+        for line in line_objs:
+            features.append(line.to_geojson())
+
+        
+
+        # Show all substations
+        # features = []
+
+        # for substation in data['substations']:
+        #     features.append(substation)
+        # for AMI in data['AMIs']:
+        #     features.append(AMI)
+        # for line in data['lines']:
+        #     features.append(line)
+
+        # print(line)
+        
         geojson = {"type": "FeatureCollection",
                    "features": features}
         
-        my_interaction_groups = {
-            'connections' : connections
-        }
-        
-        return GeoJSONResult(geojson, interaction_groups=my_interaction_groups)
+
+        return GeoJSONResult(geojson)
     
     @PlotlyView('Aggregated Load Profile', duration_guess=10)
     def get_plotly_view_2(self, params, **kwargs):
