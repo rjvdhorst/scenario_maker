@@ -3,3 +3,4 @@ plotly
 viktor-table-view
 scikit-learn
 pandas
+power-grid-model
