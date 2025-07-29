@@ -22,6 +22,8 @@ from pathlib import Path
 from io import BytesIO
 from viktor import ViktorController, Color
 
+import viktor as vkt
+
 from viktor.views import (
     PlotlyView,
     MapView,
@@ -42,765 +44,230 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression 
 from sklearn.metrics import mean_squared_error, mean_absolute_error 
 from sklearn import preprocessing
-import numpy
+import numpy as np
 import pickle
 from plotly.subplots import make_subplots
 from statistics import mean
 
-
-def list_substations(**kwargs):
-    data = db.open_database()
-    substations = data['substations']
-    if not substations:
-        return ['No substations']
-    substation_names = [substation['properties']['name'] for substation in substations] # Extract the name from each substation
-    return substation_names
-
-def list_base_profiles(**kwargs):
-    return ph.LoadProfile.list_names()
-
-def list_customer_profiles(**kwargs):
-    customer_dict = ph.LoadProfile.all_customer_profiles()
-    return [profile['name'] for profile in customer_dict]
-
-def list_connected_loads(params, **kwargs):
-    substation_name = params.page_3.section_2.substation_name
-    substation = db.Substation.get_substation_by_name(substation_name)
-    if substation is not None:
-        return [load['name'] for load in substation.loads]
-    else:
-        return []
-
-def list_column_names(params, **kwargs):
-    if params["page_0"]["tab_train"]["file"]:
-        upload_file = params["page_0"]["tab_train"]["file"].file
-        data_file = BytesIO(upload_file.getvalue_binary())
-        df = pd.read_csv(data_file)
-        return list(df.columns)
-    else:
-        return []
-
-def create_default_content():
-    load_profile = ph.LoadProfile.find_load_profile('Industrial')
-    default_content = load_profile.profile_dict()
-    default_array = default_content['time_array']
-    return 
-    
-def aggregated_load_profiles(params, **kwargs):
-    time_intervals, customer_profiles = customer_load_profiles(params)
-    solar_profile = solar_profiles(params)
-    ev_profile = EV_charging_profiles(params)
-    potential_load = customer_load_growth(params)
-    aggregated_profiles = {}
-    aggregated_profiles['time_array'] = time_intervals 
-    aggregated_profiles.update(customer_profiles)
-    aggregated_profiles.update(ev_profile)
-    aggregated_profiles.update(potential_load)
-    aggregated_profiles.update(solar_profile)
-    
-    return aggregated_profiles
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import JsonOutputParser
+from langchain_core.runnables import RunnableSequence
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import HumanMessage, SystemMessage
+from pydantic import BaseModel, Field
+import json
 
 
-def EV_charging_profiles(params, **kwargs):
-    data = params['page_3']['section_3']['array']
-    aggregated_profiles = {}
+import os
+import json
+from openai import OpenAI
 
-    for entry in data:
-        number_of_chargers = entry['number']
-        power = 0
+#OPENAI_API_KEY = "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"
+#OPENAI_API_KEY = "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"
 
-        if entry['type'] == 'Slow (7 KW)':
-            power = 7
-            slow_profile = ph.LoadProfile('Slow', power, 'EV - Daily Charge - 5 PM').scale_profile()
-            aggregated_profiles['Slow Charging'] = [0] * 96
-            for i, entry in enumerate(slow_profile['time_array']):
-                aggregated_profiles['Slow Charging'][i] = entry['value']*number_of_chargers
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+def open_database():
+    json_file = Path(__file__).parent / 'dataLLM.json'
+
+    with open(json_file, 'r') as f:
+        data = json.load(f)
         
-        elif entry['type'] == 'Public Fast (22 KW)':
-            power = 22
-            fast_profile = ph.LoadProfile('Fast', power, 'Public Fast Charger').scale_profile()
-            aggregated_profiles['Fast Charging'] = [0] * 96
-            for i, entry in enumerate(fast_profile['time_array']):
-                aggregated_profiles['Fast Charging'][i] = entry['value']*number_of_chargers
+    return data
 
-        elif entry['type'] == 'Public Ultra Fast (70 KW)':
-            power = 70
-            aggregated_profiles['Ultra Fast Charging'] = [0] * 96
-            ultra_fast_profile = ph.LoadProfile('Ultra Fast', power, 'Public Ultra Fast Charger').scale_profile()
-            for i, entry in enumerate(ultra_fast_profile['time_array']):
-                aggregated_profiles['Ultra Fast Charging'][i] = entry['value']*number_of_chargers
-    return aggregated_profiles
+def save_database(data):
+    json_file = Path(__file__).parent / 'dataLLM.json'
 
+    with open(json_file, 'w') as f:
+        json.dump(data, f)
 
-def customer_load_profiles(params, **kwargs):
-    substation_name = params['page_3']['section_0']['substation_name']
-    substation = db.Substation.get_substation_by_name(substation_name)
-    connected_amis = substation.get_connected_AMIs()
+# Define the output schema and parser
+class EnergyScenario(BaseModel):
+    households: int = Field(..., description="Number of households")
+    commercials: int = Field(..., description="Number of commercial buildings")
+    industrials: int = Field(..., description="Number of industrial customers")
+    chargers: int = Field(..., description="Number of EV chargers")
+    solar_capacity_kw: int = Field(..., description="Estimated total solar capacity in kW")
+    charging_start: str = Field(..., description="Typical charging session start time, e.g. '18:00'")
 
-    aggregated_profiles = {}
+parser = JsonOutputParser(pydantic_object=EnergyScenario)
 
-    time_intervals = [entry['time'] for entry in connected_amis[0]['properties']['load']['time_array']]
+# LLM setup
+llm = ChatOpenAI(model="gpt-4o", temperature=0.3)
 
-    for ami in connected_amis:
-        customer_type = ami['properties']['customer_type']
-        if customer_type not in aggregated_profiles:
-            aggregated_profiles[customer_type] = [0] * len(time_intervals)
+# Prompt to extract scenario values
+extraction_prompt = ChatPromptTemplate.from_messages([
+    ("system", "You are an assistant that extracts energy scenario parameters from a user's description."),
+    ("human", "{input}"),
+    ("system", "Based on this input, output the corresponding energy scenario dictionary using this format:\n{format_instructions}")
+])
 
-        for i, entry in enumerate(ami['properties']['load']['time_array']):
-            aggregated_profiles[customer_type][i] += entry['value']
+chain = extraction_prompt | llm | parser
 
-    return time_intervals, aggregated_profiles
+# Prompt to summarize assumptions
+summary_prompt = ChatPromptTemplate.from_messages([
+    ("system", "You are an assistant that creates a scenario summary for an energy planner based on the parameters below."),
+    ("human", "This is the final dictionary: {dict}.\nPlease write a short summary describing the neighborhood and the assumptions that were made.")
+])
 
-
-def customer_load_growth(params, **kwargs):
-    data = params['page_3']['section_1']['table']
-
-    time_invervals, customers_aggregated_load = customer_load_profiles(params)
-    
-    potential_load = {}
-
-    for entry in data:
-        customer_type = entry['customer_type']
-        customer_key = 'Load Growth - ' + customer_type
-        load_growth_factor = entry['lgf']*0.01
-        potential_load[customer_key] = [0] * len(time_invervals)
-        for i, entry in enumerate(customers_aggregated_load[customer_type]):
-            potential_load[customer_key][i] = entry * (load_growth_factor)
-
-    return potential_load
-
-
-def solar_profiles(params, **kwargs):
-    substation_name = params['page_3']['section_0']['substation_name']
-    data = params['page_3']['section_2']['solar_array']
-    substation = db.Substation.get_substation_by_name(substation_name)
-
-    peak_load = 0
-    
-    aggregated_profiles = {}
-    
-    if not data:
-        aggregated_profiles['Solar'] = [0] * 96
-        return aggregated_profiles
-    
-    for entry in data:
-        if not entry['percentage']:
-            aggregated_profiles['Solar'] = [0] * 96
-            return aggregated_profiles
-        if not entry['peak_load']:
-            aggregated_profiles['Solar'] = [0] * 96
-            return aggregated_profiles
-    
-    for entry in data:
-        customer_group = entry['customer_group']
-        number_of_customers = 0
-        percentage = entry['percentage']*0.01
-        number_of_panels = entry['peak_load']
-
-        for ami in substation.get_connected_AMIs():
-            if ami['properties']['customer_type'] == customer_group:
-                number_of_customers += 1
-        
-        print(number_of_customers)
-        
-        peak_load += number_of_customers * percentage * number_of_panels * 0.5
-
-    peak_load = round(peak_load, 1)
-    solar_profile = ph.LoadProfile('Solar', peak_load, 'Solar_array').scale_profile()
-    aggregated_profiles['Solar'] = [0] * 96
-
-    for i, entry in enumerate(solar_profile['time_array']):
-        aggregated_profiles['Solar'][i] -= entry['value']
-
-    if aggregated_profiles['Solar'] == [0]*96:
-        return {}
-    return aggregated_profiles
-
-def solar_peak_load(params, **kwargs):
-    if solar_profiles(params) == {}:
-        return "Calculating..."
-    else:
-        return -1*min(solar_profiles(params)['Solar'])
+summary_chain = summary_prompt | llm
 
 class Parametrization(ViktorParametrization):
-    # step_1 = Step("Manage Substations/Transformers", views=["get_map_view_1"], enabled=False)
-    # step_1.section_1 = Section("Add Substations/Transformers")
-    # step_1.section_1.intro = Text('Add a new substation to the database. Specify the name and location of the substation or transformer.')
-    # step_1.section_1.substation_name = TextField('#### Name', flex = 100)
-    # # step_1.section_1.substation_power = IntegerField('#### Powerrating', flex=33)
-    # # step_1.section_1.number_of_feeders = IntegerField('#### Number of feeders', flex=33)
-    # step_1.section_1.substation_location = GeoPointField('#### Location')
-    # step_1.section_1.add_button = ActionButton('Add to Database', flex=100, method='add_substation')
 
-    # step_1.section_2 = Section("Add AMI", description="Add an AMI to the database")
-    # step_1.section_2.ami_id = TextField('AMI ID', flex=50)
-    # step_1.section_2.ami_location = GeoPointField('Location')
-    # step_1.section_2.customer_type = OptionField('Customer Type', options=['Household', 'Industrial', 'Commercial'], flex=50)
-    # step_1.section_2.substation = OptionField('Substation', options=list_substations(), flex=50)
-    # step_1.section_2.add_button = ActionButton('Add to Database', flex=100, method='add_ami')
-
-    # step_1.section_3 = Section("Remove Substations/Transformers", description="Remove")
-    # step_1.section_3.substation_name = OptionField('Name', options=list_substations(), flex=50)
-    # step_1.section_3.remove_button = ActionButton('Remove from Database', flex=50, method='remove_substation')
-    # step_1.section_3.create_lines = ActionButton('Create lines', flex=50, method='create_lines')
-
-    page_3 = Page("Energy Landscape Builder", views=['get_map_view_1', 'get_plotly_view_2', 'substation_load_overview'])
-    
-    page_3.section_0 = Section("Select Substation")
-    page_3.section_0.substation_name = OptionField("Substation", options=list_substations(), flex=50)
-
-    page_3.section_01 =           Section("Assign Profiles")
-    page_3.section_01.selection = SetParamsButton("Select Customers",
-                                    method="select_customers",
-                                    interaction=MapSelectInteraction('get_map_view_1', selection=['connections'], max_select=50), flex=100
-                                    )
-    
-    page_3.section_01.substation_name = OptionField("Customer Profile", options=list_customer_profiles(), flex=50)
-
-    page_3.section_1 = Section("Load Growth", description="Assign a load growth factor to each customer group for the selected substation.")
-    page_3.section_1.text_1 = Text("""To carefully predict the load on the substation, a different load growth factor can be assigned to each customer group.""")
-    page_3.section_1.table = DynamicArray("")
-    page_3.section_1.table.customer_type = OptionField("Customer Group", options=['Household', 'Industrial', 'Commercial'], flex=50)
-    page_3.section_1.table.lgf = IntegerField("Load Growth (%)", description="Define how many customers of this type are connected.", flex=50)
-
-    # page_3.section_1.connect_button = SetParamsButton('Connect', flex=100, method='connect_load')
-
-    page_3.section_2 = Section("Rooftop Solar", description="Assign a peak power production load to substation, based on the number of solar panels installed.")
-    page_3.section_2.intro = Text('This section allows you to add and simulate the impact of rooftop solar panels on the substation.')
-    page_3.section_2.solar_array = DynamicArray("")
-    page_3.section_2.solar_array.customer_group = OptionField('Customer Group', options=['Household', 'Industrial', 'Commercial'], flex=50)
-    page_3.section_2.solar_array.percentage = NumberField('% of Customers', description='Give the', flex=50, variant='slider', min=0, max=100, step=5)
-    page_3.section_2.solar_array.peak_load = NumberField('Number of Panels (500 Wp)', flex=100)
-    page_3.section_2.max_solar_load = OutputField('Installed Capacity', suffix='kWp', value=solar_peak_load,  flex=50)
-
-    page_3.section_3 = Section("EV Charging", description="Add EV charging stations to the substation. Choose between the different types of charging stations and their corresponding chargin behaviour.")
-    page_3.section_3.intro = Text('This section allows you to add and simulate the impact of EV charging stations on the substation.')
-    page_3.section_3.array = DynamicArray("")
-    page_3.section_3.array.type = OptionField("#### Type", options=['Slow (7 KW)', 'Public Fast (22 KW)', 'Public Ultra Fast (70 KW)'], flex=50)
-    page_3.section_3.array.number = IntegerField("#### Number", flex=50 )
-    
-    ###
-    
-    step_2 = Page("Load Profile Manager", views=["get_plotly_view_1",'plotly_new_load_profile'])
-    
-    step_2.section_3 = Section("View Base Load Profile")
-    step_2.section_3.select_load_profile = OptionField("Select Base Load Profile", options=list_base_profiles(), default='Household', flex=50)
-    
-    step_2.section_1 = Section("Create Customer Group", description="Customize the specified load profiles. ")
-    step_2.section_1.intro = Text("""Create load profiles for different customer types. Specify the name, peak load, and base profile. The base profile is a predefined profile that can be scaled to the peak load.""")
-
-    step_2.section_1.dynamic_array_1 = DynamicArray("")
-    step_2.section_1.dynamic_array_1.profile_name = TextField("Name", flex=33)
-    step_2.section_1.dynamic_array_1.peak_load = NumberField("Peak Load", suffix='KW', flex=33)
-    step_2.section_1.dynamic_array_1.base_profile = OptionField("Base Load Profile", options=list_base_profiles(), flex=33)
-    step_2.section_1.normalize_button = ActionButton('Add to database', flex=100, method='add_load_profile')
-
-    step_2.section_2 = Section("Add Base Load Profiles")
-    step_2.section_2.introtext = Text("A Base Load Profile can be configured by filling the table below. Note that the profile is a normalized profile. A value of 1 is equal to the peak load that will be assigned to the profile in a next step.")
-    step_2.section_2.profile_name = TextField("##### Name", flex=80)
-    step_2.section_2.table = Table("Create a New Base Load Profile", default=create_default_content())
-    step_2.section_2.table.time = TextField('time')
-    step_2.section_2.table.value = NumberField('value')
-    step_2.section_2.upload_button = ActionButton("Save Base Load Profile", flex=60, method='save_base_profile')
-
-    ###
-    
-    page_0 = Page("Load Growth Estimator", views = ["get_table_view", "get_data_view", "get_predict_view", "get_forecast_view"], width=30)
-    
-    # TODO: Tab 0 Upload File
-    page_0.tab_train = Tab("[I] Train Model")
-    page_0.tab_train.file = FileField("Upload File", file_types=[".csv"], flex = 100)
-    page_0.tab_train.features = MultiSelectField('Select Features', options=list_column_names, flex=50)
-    page_0.tab_train.target = OptionField('Select Target', options=list_column_names, flex=50)
-    page_0.tab_train.testset = NumberField("Test Sample Size", min=0.2, max=0.5, step =0.1, variant='slider', flex =100)
-    page_0.tab_train.model_name = TextField("Model Name", flex=100)
-    page_0.tab_train.train = ActionButton("Train Model", method = 'train_model', flex=100)
-
-    page_0.tab_evaluate = Tab("[II] Evaluate Model")
-    page_0.tab_evaluate.model_name = TextField('Model Name', flex = 100)
-    
-    page_0.tab_forecast = Tab("[III] Forecast")
-    page_0.tab_forecast.model_name = TextField('Model Name', flex = 100)
+    page_LLM = Page("Scenario Development Demo CARILEC", views = ["get_plotly_view_2"])
+    page_LLM.chat = vkt.Chat("Chatbot", method="call_llm", first_message="Hi, here to support you in developing an energy scenario! Please describe the neighborhood you want to develop a load profile for.")
 
 
 class Controller(ViktorController):
     label = "My Entity Type"
     parametrization = Parametrization
 
-    def select_customers(self, params, event, **kwargs):
+    def call_llm(self, params, **kwargs):
+        print("hoi2")
+        conversation = params["page_LLM"]["chat"]
+
+        if not conversation:
+            return None
+
+        # Extract latest user input
+        user_input = conversation.get_messages()
+        if not user_input:
+            return None
+
+        print("hoi")
+        # --- Run extraction chain ---
+        try:
+            result = chain.invoke({
+                "input": user_input,
+                "format_instructions": parser.get_format_instructions()
+            })
+        except Exception as e:
+            return vkt.ChatResult(conversation, f"Error extracting parameters: {e}")
+
+        print(type(result))
+        
+        # Save result in database
+        input_dict = open_database()
+        input_dict.update(result)
+        save_database(input_dict)
+
+        # --- Generate summary ---
+        try:
+            summary = summary_chain.invoke({"dict": json.dumps(result)})
+            summary_text = summary.content
+        except Exception as e:
+            summary_text = f"Error generating summary: {e}"
+
+        # Append summary to chat
+        return vkt.ChatResult(conversation, f"Parameters extracted:\n{json.dumps(result, indent=2)}\n\nSummary:\n{summary_text}")
     
-        selected_verdeelkasten = event.value        
-        new_lines = []
-        
-        # for i in selected_verdeelkasten:
-        #     kast = db.DB_find_entry(i)
-        #     sel_dict = {
-        #         "type":"Feature",
-        #         "id":str(uuid.uuid4()),
-        #         "geometry":{
-        #             "type":"LineString",
-        #             "coordinates":[ast.literal_eval(params.connect_tab.section_kasten.master_coord), kast['document']['geometry']['coordinates']]
-        #             },
-        #         "properties": {
-        #             "from-to" : [kast['document']["id"], params.connect_tab.section_kasten.master_id],
-        #             "description" : "master-connection",
-        #             "stroke" : "#545454"
-        #             }
-        #         }
-                
-        #     new_lines.append(sel_dict)
-        
-        #     result = db.DB_add_many(new_lines)
-        
-        return SetParamsResult({})  
     
-    def train_model(self, params, **kwargs):
-        upload_file = params["page_0"]["tab_train"]["file"].file
-        data_file = BytesIO(upload_file.getvalue_binary())
-        df = pd.read_csv(data_file)
-        df = df.dropna()
-
-        X = df[params["page_0"]["tab_train"]["features"]]
-        y = df[params["page_0"]["tab_train"]["target"]]
-
-
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=params["page_0"]["tab_train"]["testset"], random_state=101)
-        model = LinearRegression()
-        model.fit(X_train, y_train)
-        predictions = model.predict(X_test)
-        model_name = params["page_0"]["tab_train"]["model_name"]
+    def call_llm2(self, params, **kwargs):
+        conversation = params["page_LLM"]["chat"]
         
-        with open("models/{}.pkl".format(model_name), "wb") as f:
-            pickle.dump(model, f)
+        if not conversation:
+            return None
         
-        db.add_model(
-            
-
-            params["page_0"]["tab_train"]["model_name"],
-            params["page_0"]["tab_train"]["target"],
-            list(X.columns),
-            list(model.coef_),
-            list(y_test),
-            list(predictions),
-            mean_squared_error(y_test, predictions), 
-            mean_absolute_error(y_test, predictions)
-            )
+        vkt_messages = conversation.get_messages()
         
-        print(predictions)
-
-    def add_substation(self, params, **kwargs):
-        name = params['step_1']['section_1']['substation_name']
-        #power_rating = params['step_1']['section_1']['substation_power']
-        #num_feeders = params['step_1']['section_1']['number_of_feeders']
-        location = (params['step_1']['section_1']['substation_location'].lat, params['step_1']['section_1']['substation_location'].lon)
-        db.Substation(name, location).save_substation()
-
-    def add_ami(self, params, **kwargs):
-        ami_id = params['step_1']['section_2']['ami_id']
-        location = (params['step_1']['section_2']['ami_location'].lat, params['step_1']['section_2']['ami_location'].lon)
-        customer_type = params['step_1']['section_2']['customer_type']
-        substation = params['step_1']['section_2']['substation']
-        db.AMI(ami_id, location, customer_type, substation).save_AMI()
-
-    def remove_substation(self, params, **kwargs):
-        name = params['step_1']['section_3']['substation_name']
-        db.Substation.remove_substation(name)
-
-    def create_lines(self, params, **kwargs):
-        lines = db.create_lines()
-        return
-
-    def add_load_profile(self, params, **kwargs):
-        data = params['step_2']['section_1']['dynamic_array_1']
-        for profile in data:
-            load = ph.LoadProfile(profile['profile_name'], profile['peak_load'], profile['base_profile'])
-            load.save_profile()
-
-    def connect_load(self, params, **kwargs):
-        substation_name = params['page_3']['section_0']['substation_name']
-        data = params['page_3']['section_1']['dynamic_array_1']
-        for connection in data:
-            substation = db.Substation.get_substation_by_name(substation_name)
-            
-            if substation is None:
-                raise UserError(f"Substation {substation_name} not found")
-            
-            num_connections = connection['num_connections']
-            load = ph.LoadProfile.find_load_profile(connection['customer_type'])
-            
-            # print(load.scaled_profile)
-            substation.add_load(load, num_connections)
-            
-        result = SetParamsResult({
-            "page_3": {
-                "section_1": {
-                    "dynamic_array_1": None
-                }
+        openai_messages = [
+            {
+                "role": "system",
+                "content": "Always give a random number between 1 and 10 as output",
             }
-        })
-        print(result)
-
+        ]
+        
+        openai_messages.extend(vkt_messages)
+        
+        completion = client.chat.completions.create(
+            model="gpt-4.1", messages=openai_messages
+        )
+        
+        print(completion.choices)
+        
+        input_dict = open_database()
+        input_dict["chargers"] = int(completion.choices[0].message.content)
+        save_database(input_dict)
+                
+        return vkt.ChatResult(params["page_LLM"]["chat"], completion.choices[0].message.content)
     
-        return result
-        
-    def remove_load(self, params, **kwargs):
-        substation_name = params['page_3']['section_2']['substation_name']
-        load_name = params['page_3']['section_2']['load_name']
-        substation = db.Substation.get_substation_by_name(substation_name)
-        substation.remove_load(load_name)
-        
-    def save_base_profile(self, params, **kwargs):
-        profile_name = params['step_2']['section_2']['profile_name']
-
-        profile = params['step_2']['section_2']['table']
-        time_array = []
-        for entry in profile:
-            time_array.append({'time': entry['time'], 'value': entry['value']})
-
-        ph.BaseProfile.save_base_profile(time_array, profile_name)
-
-
-
 
     @staticmethod
-    def list_connected_loads(params, **kwargs):
-        substation_name = params['page_3']['section_2']['substation_name']
-        substation = db.Substation.get_substation_by_name(substation_name)
-        return [load['name'] for load in substation.loads]
-
-    @TableView("[I] Overview Input", duration_guess=20)
-    def get_table_view(self, params, **kwargs):
-        if params["page_0"]["tab_train"]["file"].file:
-            upload_file = params["page_0"]["tab_train"]["file"].file
-            data_file = BytesIO(upload_file.getvalue_binary())
-            df = pd.read_csv(data_file)
-            return TableResult(df)
-    
-    @DataView("[I] Model Performance Overview", duration_guess=20)
-    def get_data_view(self, params, **kwargs):
-        data = db.open_models()
-        data = data['models']
-        data_items = []
-        for i in data:
-            data_items.append(
-                DataItem("Model", "**{}**".format(i['model_name']), subgroup = DataGroup(
-                    DataItem('Target', i['target']),
-                    DataItem('Features', ' ', subgroup = DataGroup(*[DataItem(' ', x) for x in i['features']])),
-                    DataItem('MSE', i['MSE']),
-                    DataItem('MAE', i['MAE']),
-                )
-            ))
-        models = DataGroup(*data_items)
-        return DataResult(models)
-    
-    @PlotlyView('[II] Prediction Analysis', duration_guess=10)
-    def get_predict_view(self, params, **kwargs):
-        
-        model_name = params["page_0"]["tab_evaluate"]["model_name"]
-
-        with open("models/{}.pkl".format(model_name), "rb") as f:
-            model = pickle.load(f)
-        
-        upload_file = params["page_0"]["tab_train"]["file"].file
-        data_file = BytesIO(upload_file.getvalue_binary())
-        df = pd.read_csv(data_file)
-        df = df.dropna()
-        
-        data = db.open_models()
-        data = data['models']
-        for m in data:
-            
-            if m['model_name'] == model_name:
-                model_features = m['features']
-                model_target = m['target']
-        
-        df_23_ytest = df[df['Time'].str.contains('22|23')][model_target]
-        df_23_Xtest = df[df['Time'].str.contains('22|23')][model_features]
-
-        x_ax = df[df['Time'].str.contains('22|23')]['Time']
-        
-        predictions = model.predict(df_23_Xtest)
-        
-        print(list(df_23_ytest))
-        print(predictions)
-            
-        data = []
-        data.append(go.Line(y=df_23_ytest, x=x_ax, name = 'Actual Data', line=dict(color='lightgrey', width=3)))
-        data.append(go.Line(y=predictions, x=x_ax, name = 'Predicted Values', line=dict(color='royalblue', width=3)))
-
-        fig = go.Figure(data = data)
-        fig.update_layout(plot_bgcolor='whitesmoke', hovermode = 'x')
-        fig = fig.to_json()
-        
-        return PlotlyResult(fig)
-    
-    @PlotlyView('[III] Forecast', duration_guess=10)
-    def get_forecast_view(self, params, **kwargs):
-        
-        model_name = params["page_0"]["tab_forecast"]["model_name"]
-
-        with open("models/{}.pkl".format(model_name), "rb") as f:
-            model = pickle.load(f)
-        
-        upload_file = params["page_0"]["tab_train"]["file"].file
-        data_file = BytesIO(upload_file.getvalue_binary())
-        df = pd.read_csv(data_file)
-        
-        data = db.open_models()
-        data = data['models']
-        for m in data:
-            if m['model_name'] == model_name:
-                model_features = m['features']
-                model_target = m['target']
-        
-        df_select = df[df[model_target].isnull()]
-        print(df_select)
-        df_24_x_pred = df_select[model_features]
-        print(df_24_x_pred)
-        index_start = df_select.index[0]
-        index_end = index_start + len(df_select)
-        old_values = list(df[model_target])[index_start-12:index_end-12]
-        predictions = model.predict(df_24_x_pred)
-
-        result = []
-        for i in range(len(old_values)):
-            result.append(round(((predictions[i] - old_values[i])/old_values[i])*100))
-        
-        x_ax = df['Time'][index_start:index_end]
-        
-        fig = make_subplots(specs=[[{"secondary_y": True}]])
- 
-        fig.add_trace(
-        go.Bar(y=result, x=x_ax, name="LG %", opacity=0.3, marker=dict(color='lightsteelblue')),
-        secondary_y=False,
-        )
-
-        fig.add_trace(
-            go.Scatter(y=[round(mean(result))]*len(old_values), x=x_ax, mode = 'lines', name="Avg. LG %", line=dict(color='darkorange', width = 4)),
-            secondary_y=False,
-        )
-
-        fig.add_trace(
-            go.Scatter(y=old_values, x=x_ax, name="Old Data [kW]", line=dict(color='lightslategrey', width=3)),
-            secondary_y=True,
-        )
-
-        fig.add_trace(
-            go.Scatter(y=predictions, x=x_ax, name="Prediction [kW]", line=dict(color='royalblue', width=3)),
-            secondary_y=True,
-        )
-
-        # Add figure title
-        fig.update_layout(
-            plot_bgcolor = "whitesmoke"
-        )
-
-        # Set y-axes titles
-        fig.update_yaxes(title_text="<b>Load Growth Factor</b> %", secondary_y=False)
-        fig.update_yaxes(title_text="<b>Peak Load</b> kW", secondary_y=True)
-        fig.update_layout(hovermode="x")
-        fig = fig.to_json()
-        
-        return PlotlyResult(fig)
-    
-    
-    @PlotlyView('Selected Base Load Profile', duration_guess=1)
-    def get_plotly_view_1(self, params, **kwargs):
-        profile_name = params['step_2']['section_3']['select_load_profile']
-
-        if profile_name == None:
-            profile_name = 'Household'
-        
-        profile  = ph.BaseProfile(profile_name).load_profile_data()
-
-        time = [entry['time'] for entry in profile['time_array']]
-        values = [entry['value'] for entry in profile['time_array']]
-
-        fig = go.Figure()
-        fig.add_trace(go.Bar(x=time, y=values, name='Load'))
-        
-        fig.update_layout(
-            title= profile['name'] + ' - Load Profile',
-            xaxis_title='Hour of the Day',
-            yaxis_title='Normalized Load',
-            xaxis=dict(
-            tickmode='array',
-            tickvals=[time[i] for i in range(0, len(time), 12)],  # Every three hours (12 * 15 minutes = 3 hours)
-            ticktext=[time[i] for i in range(0, len(time), 12)],
-            range=[0, len(time)-1]
-            ),
-            yaxis=dict(
-            range=[0, 1]
-            )
-        )
-
-        fig = fig.to_json()
-        
-        return PlotlyResult(fig)
-
-    @PlotlyView('New Base Load Profile', duration_guess=1)
-    def plotly_new_load_profile(self, params, **kwargs):
-        profile_name = params['step_2']['section_3']['select_load_profile']
-
-        if profile_name == None:
-            profile_name = 'Industrial'
-        
-        profile  = params['step_2']['section_2']['table']
-
-        time = [entry['time'] for entry in profile]
-        values = [entry['value'] for entry in profile]
-
-        fig = go.Figure()
-        fig.add_trace(go.Bar(x=time, y=values, name='Load'))
-        
-        fig.update_layout(
-            title= profile_name + ' - Load Profile',
-            xaxis_title='Hour of the Day',
-            yaxis_title='Normalized Load',
-            xaxis=dict(
-            tickmode='array',
-            tickvals=[time[i] for i in range(0, len(time), 12)],  # Every three hours (12 * 15 minutes = 3 hours)
-            ticktext=[time[i] for i in range(0, len(time), 12)],
-            range=[0, len(time)-1]
-            ),
-            yaxis=dict(
-            range=[0, 1]
-            )
-        )
-
-        fig = fig.to_json()
-        
-        return PlotlyResult(fig)
-    
-    @GeoJSONView('Energy Landscape Overview', duration_guess=2)
-    def get_map_view_1(self, params, **kwargs):
-
-        data = db.open_database()
-
-        # Show all substations
-        features = []
-        connections = []
-        
-        for substation in data['substations']:
-            features.append(substation)
-        for AMI in data['AMIs']:
-            connections.append(AMI['id'])
-            features.append(AMI)
-        for line in data['lines']:
-            features.append(line)
-
-        geojson = {"type": "FeatureCollection",
-                   "features": features}
-        
-        my_interaction_groups = {
-            'connections' : connections
-        }
-        
-        return GeoJSONResult(geojson, interaction_groups=my_interaction_groups)
-    
     @PlotlyView('Aggregated Load Profile', duration_guess=10)
     def get_plotly_view_2(self, params, **kwargs):
-        import plotly.graph_objects as go
-        aggregated_profiles = {}
-        substation_name = params['page_3']['section_0']['substation_name']
 
-        aggregated_profiles = aggregated_load_profiles(params)
-        time_intervals = aggregated_profiles['time_array']
-        aggregated_profiles.pop('time_array')
+        # ---- User Inputs ---- #
+        input_dict = open_database()
 
-        # Define color scheme
-        color_map = {
-            'Household': 'rgb(4, 118, 208)',  # Blue for Household
-            'Load Growth - Household': 'rgba(4, 118, 208, 0.5)',  # Lighter blue for potential growth
-            'Industrial': 'rgb(137, 207, 240)',  # DarkBlue for Industrial
-            'Load Growth - Industrial': 'rgba(137, 207, 240, 0.5)',  # Lighter for potential growth
-            'Commercial': 'rgb(0, 0, 139)',  # Orange for Commercial
-            'Load Growth - Commercial': 'rgba(0, 0, 139, 0.5)',  # Lighter orange for potential growth
-            'Slow Charging': 'rgb(148, 103, 189)',  # Purple for Slow Charging
-            'Fast Charging': 'rgba(148, 103, 189, 0.75)',  # Medium purple for Fast Charging
-            'Ultra Fast Charging': 'rgba(148, 103, 189, 0.5)',  # Lighter purple for Ultra Fast Charging
-            'Solar': 'rgb(255, 215, 0)'  # Yellow for Solar generation
-        }
+        # ---- Time Vector ---- #
+        times = pd.date_range("00:00", "23:45", freq="15min").strftime('%H:%M').tolist()
+        n = len(times)
 
-        # Define the order of layers
-        layer_order = [
-            'Industrial', 'Load Growth - Industrial',
-            'Commercial', 'Load Growth - Commercial',
-            'Household', 'Load Growth - Household',  # Bottom layers
-            'Slow Charging', 'Fast Charging', 'Ultra Fast Charging',  # EV Charging
-            'Solar'  # Solar on top
-        ]
+        # ---- EV Charging Profile ---- #
+        charging_profile = np.zeros(n)
+        start_idx = times.index(input_dict["charging_start"])
+        for i in range(8):  # Charging over 2 hours
+            idx = (start_idx + i) % n
+            charging_profile[idx] = 1
+        charging_profile = charging_profile * 11 * input_dict["chargers"]
 
-        # Create the stacked bar chart
+        # ---- Provided Profiles ---- #
+        # Household
+        household_profile = [0.2,0.15,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,
+            0.1,0.1,0.1,0.1,0.1,0.15,0.2,0.25,0.4,0.5,0.6,0.65,0.7,0.75,0.8,0.85,
+            0.8,0.75,0.7,0.65,0.6,0.55,0.5,0.45,0.4,0.35,0.3,0.3,0.3,0.3,0.3,0.3,
+            0.35,0.4,0.45,0.5,0.45,0.4,0.35,0.3,0.3,0.3,0.3,0.3,0.35,0.4,0.45,0.5,
+            0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95,1.0,0.95,0.9,0.85,0.8,0.75,0.7,0.7,
+            0.7,0.7,0.7,0.7,0.7,0.65,0.6,0.55,0.5,0.45,0.4,0.35,0.3,0.25,0.2,0.2]
+
+        # Commercial
+        commercial_profile = [0.2,0.15,0.1,0.11,0.12,0.1,0.11,0.12,0.12,0.1,0.11,0.1,0.1,0.1,0.08,0.12,
+            0.15,0.2,0.21,0.24,0.26,0.28,0.3,0.35,0.4,0.5,0.6,0.65,0.7,0.75,0.8,0.85,
+            0.8,0.8,0.85,0.85,0.9,0.85,0.875,0.875,0.85,0.875,0.82,0.81,0.865,0.875,0.865,0.865,
+            0.93,0.91,0.9,0.88,0.87,0.9,0.88,0.83,0.85,0.84,0.83,0.82,0.83,0.85,0.86,0.87,
+            0.85,0.9,0.85,0.85,0.84,0.85,0.82,0.81,0.8,0.78,0.75,0.75,0.75,0.75,0.77,0.7,
+            0.68,0.65,0.73,0.7,0.7,0.65,0.6,0.55,0.5,0.45,0.4,0.35,0.3,0.25,0.2,0.2]
+
+        # Industrial
+        industrial_profile = [0.1,0.11,0.1,0.09,0.1,0.09,0.1,0.11,0.1,0.09,0.1,0.1,0.1,0.11,0.1,0.1,
+            0.1,0.1,0.1,0.11,0.1,0.1,0.2,0.32,0.41,0.52,0.63,0.7,0.81,0.92,0.98,0.99,
+            0.98,0.99,1.0,0.97,0.98,0.99,1.0,1.0,0.99,0.98,1.0,0.98,1.0,1.0,0.98,1.0,
+            0.99,0.98,0.99,0.97,0.98,0.99,1.0,0.99,0.98,0.97,0.99,0.98,0.99,0.98,0.99,1.0,
+            1.0,0.99,0.98,1.0,0.99,0.88,0.8,0.71,0.62,0.53,0.44,0.31,0.22,0.21,0.2,0.22,
+            0.2,0.21,0.22,0.2,0.2,0.21,0.2,0.2,0.2,0.21,0.2,0.19,0.2,0.21,0.2,0.19]
+
+        # Solar
+        solar_profile = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+            0.1,0.12,0.15,0.2,0.25,0.3,0.45,0.5,0.55,0.58,0.6,0.7,0.67,0.65,0.7,0.75,
+            0.75,0.8,0.85,0.7,0.8,0.9,0.91,0.92,0.99,0.98,0.99,0.97,0.98,0.99,1,0.95,
+            1,0.9,0.95,1,0.99,0.95,0.9,0.85,0.8,0.7,0.6,0.55,0.5,0.45,0.3,0.2,
+            0.1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+
+        # ---- Scale Profiles ---- #
+        household_load = np.array(household_profile) * input_dict["households"] * 2
+        commercial_load = np.array(commercial_profile) * input_dict["commercials"] * 5
+        industrial_load = np.array(industrial_profile) * input_dict["industrials"] * 10
+        solar_generation = np.array(solar_profile) * input_dict["solar_capacity_kw"]
+
+        # ---- Plot ---- #
         fig = go.Figure()
+        fig.add_bar(x=times, y=industrial_load, name="Industrial", marker_color="rgba(137, 207, 240, 1)")
+        fig.add_bar(x=times, y=commercial_load, name="Commercial", marker_color="rgba(0, 0, 139, 1)")
+        fig.add_bar(x=times, y=household_load, name="Household", marker_color="rgba(4, 118, 208, 1)")
+        fig.add_bar(x=times, y=charging_profile, name="EV Charging", marker_color="rgba(148, 103, 189, 1)")
+        fig.add_bar(x=times, y=-solar_generation, name="Solar (negative)", marker_color="rgba(255, 215, 0, 1)")
 
-        # Add each customer type to the stacked bar chart in the defined order
-        for customer_type in layer_order:
-            if customer_type in aggregated_profiles:  # Check if key exists in aggregated_profiles
-                fig.add_trace(go.Bar(
-                    x=time_intervals,
-                    y=aggregated_profiles[customer_type],
-                    name=customer_type,
-                    marker=dict(color=color_map.get(customer_type, 'gray'))  # Default to gray if no color found
-                ))
-
-        # Customize layout
         fig.update_layout(
+            title="Aggregated Load Profile (Stacked)",
             barmode='stack',
-            title=f'Aggregated Load Profile for <b>{substation_name}',
-            xaxis_title='Time',
-            yaxis_title='Load (kW)',
-            legend_title='Customer Type',
-            template='plotly_white'  # Cleaner layout with white background
+            xaxis_title="Time of Day",
+            yaxis_title="Load (kW)",
+            template='plotly_white',
+            legend_title="Source"
         )
+
 
         fig = fig.to_json()
 
         return PlotlyResult(fig)
 
-
-    @DataView("Assumptions Overview", duration_guess=10)
-    def substation_load_overview(self, params, **kwargs):
-        substation_name = params['page_3']['section_0']['substation_name']
-        aggregated_profiles = aggregated_load_profiles(params)
-        aggregated_profiles.pop('time_array')
-
-        solar_peakload = solar_peak_load(params)
-
-        connected_amis = db.Substation.get_substation_by_name(substation_name).get_connected_AMIs()
-        
-        household_amis = len([ami for ami in connected_amis if ami['properties']['customer_type'] == 'Household'])
-        industrial_amis = len([ami for ami in connected_amis if ami['properties']['customer_type'] == 'Industrial'])
-        commercial_amis = len([ami for ami in connected_amis if ami['properties']['customer_type'] == 'Commercial'])
-        total_amis = len(connected_amis)
-
-        total_ev_power = 0
-
-        for entry in params['page_3']['section_3']['array']:
-            if entry['type'] == 'Slow (7 KW)':
-                total_ev_power += 7 * entry['number']
-            elif entry['type'] == 'Public Fast (22 KW)':
-                total_ev_power += 22 * entry['number']
-            elif entry['type'] == 'Public Ultra Fast (70 KW)':
-                total_ev_power += 70 * entry['number']
-
-        data = DataGroup(
-            AMIs = DataItem('Connections to ' + substation_name, str(total_amis), subgroup=DataGroup(
-                households=DataItem('Household Connections: (' + str(household_amis) +')', max(aggregated_profiles['Household']), prefix='Combined Peak Load', suffix='KW'),
-                industrial=DataItem('Industrial Connections: (' + str(industrial_amis) +')', max(aggregated_profiles['Industrial']), prefix='Combined Peak Load', suffix='KW'),
-                commercial=DataItem('Commercial Connections: (' + str(commercial_amis) +')', max(aggregated_profiles['Commercial']), prefix='Combined Peak Load', suffix='KW'),
-            )),
-            rooftop_solar = DataItem('Rooftop Solar', str(solar_peakload), suffix='kWp'),
-            EV_charging = DataItem('EV Charging', '', subgroup=DataGroup(
-                total_power=DataItem('Total installed power:', total_ev_power, suffix='kW'),
-                number_of_chargers=DataItem('Total number of chargers:', sum([entry['number'] for entry in params['page_3']['section_3']['array']]), subgroup=DataGroup(
-                    slow_chargers=DataItem('Slow (7 KW):', sum([entry['number'] for entry in params['page_3']['section_3']['array'] if entry['type'] == 'Slow (7 KW)'])),
-                    fast_chargers=DataItem('Fast (22 KW):', sum([entry['number'] for entry in params['page_3']['section_3']['array'] if entry['type'] == 'Public Fast (22 KW)'])),
-                    ultra_fast_chargers=DataItem('Ultra Fast (70 KW):', sum([entry['number'] for entry in params['page_3']['section_3']['array'] if entry['type'] == 'Public Ultra Fast (70 KW)']))
-                )
-                )
-            ))
-        )
-
-
-        return DataResult(data)
