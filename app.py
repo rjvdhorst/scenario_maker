@@ -62,9 +62,6 @@ import os
 import json
 from openai import OpenAI
 
-#OPENAI_API_KEY = "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"
-#OPENAI_API_KEY = "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"
-
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def open_database():
